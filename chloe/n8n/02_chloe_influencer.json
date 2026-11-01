@@ -1,0 +1,208 @@
+{
+  "name": "Chloe 02 - 인플루언서 마케팅 (추천·DM·계약초안)",
+  "nodes": [
+    {
+      "id": "8d9d3f2c-f9c4-47fd-8d6c-9ddb6d052629",
+      "name": "설명",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -260
+      ],
+      "parameters": {
+        "width": 1240,
+        "height": 200,
+        "content": "## Chloe 02 · 인플루언서 마케팅\n프론트 → **Webhook** → 요청 정리(후보 DB에서 적합도 점수 계산) → **AI Agent 클로이**(추천 이유·첫 DM·계약 초안·브리프) → 결과 검증(DB와 대조해 수치 덮어쓰기, 예산 확인) → 응답\n\n후보 DB는 데모용 가상 인물입니다. 실제 운영 시 Google Sheets 노드 등으로 교체."
+      }
+    },
+    {
+      "id": "99e31c63-0aa7-487d-98f8-cf569a60a91c",
+      "name": "Webhook (프론트 요청 받기)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "5a1c72b6-ec8c-4eec-a1b4-3da835d24bdf",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chloe-influencer",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      }
+    },
+    {
+      "id": "930d3a28-5787-40d3-a4ee-e03ac56a4bba",
+      "name": "요청 정리",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// 프론트엔드(MVP)가 보낸 요청 본문 읽기\nconst raw = $input.first().json;\nlet b = raw.body ?? raw;\nif (typeof b === 'string') { try { b = JSON.parse(b); } catch (e) { b = {}; } }\nconst v = (x, d) => (x === undefined || x === null || x === '' ? d : x);\n\n// ▼ 데모용 인플루언서 후보 DB (가상의 인물). 실제 검색 API 연동 전까지 이 목록에서 추천합니다.\n//   실제 운영 시 이 부분을 Google Sheets / 인플루언서 검색 API 노드로 교체하면 됩니다.\nconst DB = [\n  { handle: '@glowwith_hana', name: '하나의 피부일기', platform: '인스타그램', tags: ['뷰티','스킨케어'], followers: 48000, engagement_rate: 5.8, avg_cost: 350000, audience: '20~30대 여성 82%', note: '민감성 피부 루틴 콘텐츠' },\n  { handle: '@daily_minji', name: '민지의 데일리', platform: '인스타그램', tags: ['뷰티','패션','라이프'], followers: 125000, engagement_rate: 3.1, avg_cost: 900000, audience: '20대 여성 75%', note: '데일리룩·메이크업' },\n  { handle: '@skin_lab_doc', name: '피부연구소 J', platform: '유튜브', tags: ['뷰티','스킨케어'], followers: 210000, engagement_rate: 4.2, avg_cost: 2500000, audience: '25~39세 여성 68%', note: '성분 분석 리뷰' },\n  { handle: '@ondo_vlog', name: '온도 브이로그', platform: '유튜브', tags: ['라이프','리빙'], followers: 86000, engagement_rate: 6.5, avg_cost: 800000, audience: '20~30대 1인 가구', note: '자취·살림 브이로그' },\n  { handle: '@fitjun', name: '핏준', platform: '인스타그램', tags: ['푸드','건강','운동'], followers: 67000, engagement_rate: 4.9, avg_cost: 450000, audience: '20~30대 남성 60%', note: '홈트·식단' },\n  { handle: '@salad_mom', name: '샐러드맘', platform: '인스타그램', tags: ['푸드','건강','육아'], followers: 39000, engagement_rate: 7.2, avg_cost: 250000, audience: '30~40대 여성 80%', note: '건강 간식 레시피' },\n  { handle: '@tech_ssam', name: '테크쌤', platform: '유튜브', tags: ['테크','리빙'], followers: 320000, engagement_rate: 3.4, avg_cost: 3500000, audience: '20~40대 남성 70%', note: '가전·IT 리뷰' },\n  { handle: '@mood_room', name: '무드룸', platform: '인스타그램', tags: ['리빙','인테리어'], followers: 54000, engagement_rate: 5.1, avg_cost: 400000, audience: '25~35세 여성 77%', note: '원룸 인테리어' },\n  { handle: '@ootd_seoul', name: '서울 오오티디', platform: '틱톡', tags: ['패션','뷰티'], followers: 180000, engagement_rate: 8.3, avg_cost: 700000, audience: '10~20대 64%', note: '숏폼 스타일링' },\n  { handle: '@cleanbeauty_yu', name: '유의 클린뷰티', platform: '틱톡', tags: ['뷰티','스킨케어'], followers: 92000, engagement_rate: 9.1, avg_cost: 500000, audience: '18~29세 여성 79%', note: '숏폼 성분·사용감 리뷰' },\n  { handle: '@hometable_k', name: '홈테이블', platform: '유튜브', tags: ['푸드','리빙'], followers: 145000, engagement_rate: 4.6, avg_cost: 1500000, audience: '30~50대 여성 71%', note: '집밥·주방용품' },\n  { handle: '@gadget_bori', name: '가젯보리', platform: '틱톡', tags: ['테크','라이프'], followers: 76000, engagement_rate: 7.7, avg_cost: 400000, audience: '20대 58%', note: '신기한 아이템 숏폼' },\n];\n\nconst p = {\n  product: v(b.product, '이름 미입력 제품'),\n  category: v(b.category, '뷰티'),\n  price: Number(v(b.price, 0)),\n  features: v(b.features, ''),\n  target: v(b.target, ''),\n  budget: Number(v(b.budget, 1000000)),\n  goal: v(b.goal, '인지도 확대'),\n  platform: v(b.platform, '상관없음'),\n  past_collabs: Array.isArray(b.past_collabs) ? b.past_collabs : [],\n};\n\n// ▼ 적합도 점수 (규칙 기반, 100점 만점) — AI가 숫자를 지어내지 않도록 코드로 계산\nconst scored = DB.map(i => {\n  let s = 0; const why = [];\n  if (i.tags.includes(p.category)) { s += 40; why.push('카테고리 일치 +40'); }\n  s += Math.round(Math.min(i.engagement_rate / 8, 1) * 25); why.push(`참여율 ${i.engagement_rate}%`);\n  if (i.avg_cost <= p.budget * 0.4) { s += 20; why.push('예산 여유 +20'); }\n  else if (i.avg_cost <= p.budget) { s += 10; why.push('예산 내 +10'); }\n  else why.push('예산 초과');\n  if (p.platform === '상관없음' || i.platform === p.platform) { s += 15; }\n  const past = p.past_collabs.find(c => c.handle === i.handle);\n  if (past && past.result === 'good') { s += 10; why.push('과거 협업 성과 좋음 +10'); }\n  if (past && past.result === 'bad') { s -= 15; why.push('과거 협업 아쉬움 -15'); }\n  return { ...i, fit_score: Math.max(0, Math.min(100, s)), score_detail: why.join(', ') };\n}).sort((a, b2) => b2.fit_score - a.fit_score);\n\nconst top = scored.slice(0, 5);\n\nlet prompt = `아래 제품에 맞는 인플루언서 협업 계획을 작성해줘.\n\n[제품 정보]\n- 제품명: ${p.product} / 카테고리: ${p.category} / 판매가: ${p.price.toLocaleString()}원\n- 특징: ${p.features}\n- 타겟: ${p.target}\n- 인플루언서 협업 예산: ${p.budget.toLocaleString()}원\n- 협업 목표: ${p.goal} / 희망 플랫폼: ${p.platform}\n\n[후보 인플루언서 목록 — 적합도 점수 높은 순, 이 안에서만 추천]\n${top.map((i, n) => `${n + 1}. ${i.handle} (${i.name}) | ${i.platform} | 팔로워 ${i.followers.toLocaleString()} | 참여율 ${i.engagement_rate}% | 평균 단가 ${i.avg_cost.toLocaleString()}원 | 주 시청층 ${i.audience} | ${i.note} | 적합도 ${i.fit_score}점 (${i.score_detail})`).join('\\n')}\n\n[과거 협업 이력]\n${p.past_collabs.length ? p.past_collabs.map(c => `${c.handle}: ${c.result === 'good' ? '성과 좋음' : '성과 아쉬움'} ${c.memo || ''}`).join('\\n') : '없음'}\n\n[출력 형식] 아래 JSON 구조 그대로, 값만 채워서 출력:\n{\n  \"summary\": \"추천 전략 한 줄 요약\",\n  \"recommendations\": [ { \"handle\": \"@목록의 핸들 그대로\", \"reason\": \"추천 이유\", \"risk\": \"주의할 점\", \"suggested_offer\": \"제안 조건(예: 제품 제공 + 원고료 30만원)\" } ],\n  \"proposal_dm\": { \"to\": \"@1순위 핸들\", \"message\": \"첫 협업 제안 DM 전문\" },\n  \"contract_draft\": { \"title\": \"계약서 제목\", \"clauses\": [ { \"title\": \"제1조 (조항명)\", \"content\": \"조항 내용\" } ], \"note\": \"유의사항\" },\n  \"content_brief\": { \"key_messages\": [\"핵심 메시지\"], \"dos\": [\"꼭 해주세요\"], \"donts\": [\"피해주세요\"], \"schedule\": \"초안 제출·수정·게시 일정\" }\n}\n\nrecommendations는 3명(예산 안에서 실행 가능한 조합 우선), contract_draft.clauses는 8개 이상.`;\n\n// 대표의 수정 요청이 있으면 이전 결과와 함께 전달 (승인 → 수정 → 재승인 왕복 흐름)\nif (b.feedback) {\n  prompt += `\\n\\n[대표 수정 요청]\\n${b.feedback}\\n\\n[이전 결과]\\n${JSON.stringify(b.previous || {}).slice(0, 8000)}\\n\\n위 수정 요청을 반드시 반영해서, 같은 JSON 형식으로 전체 결과를 다시 작성해줘. 수정 요청과 관계없는 좋은 부분은 유지해.`;\n}\n\nreturn [{ json: { prompt, request: p, candidates: top, startedAt: Date.now() } }];\n"
+      }
+    },
+    {
+      "id": "84419bec-5ed8-4b54-9dad-6b504cee1cfc",
+      "name": "AI Agent 클로이",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        500,
+        0
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.prompt }}",
+        "options": {
+          "systemMessage": "너는 '클로이(Chloe)'다. 전담 마케터가 없는 소규모 브랜드 대표를 돕는 AI 인플루언서 마케팅 에이전트다.\n\n[역할]\n1. 사용자 메시지로 주어진 '후보 인플루언서 목록' 안에서만 협업 후보를 추천하고, 추천 이유와 리스크를 설명한다.\n2. 1순위 후보에게 대표가 직접 보낼 첫 협업 제안 DM을 작성한다.\n3. 표준 양식 기반의 협업 계약서 초안을 작성한다.\n4. 인플루언서에게 전달할 콘텐츠 브리프를 작성한다.\n\n[원칙]\n- 후보 목록에 없는 인플루언서를 만들어내지 않는다. 팔로워 수, 참여율, 단가 같은 수치는 목록 값을 그대로 쓴다.\n- 과거 협업 이력(좋은 성과/아쉬운 성과)이 있으면 추천 판단에 반영하고 이유에 밝힌다.\n- 첫 DM은 대표 이름으로 보내는 정중하고 짧은 메시지다. 단가를 먼저 깎거나 압박하지 않는다.\n- 계약서에는 협업 내용, 일정, 대가와 지급, 콘텐츠 2차 활용(광고 사용 범위와 기간), 광고 표기 의무(#광고, 유료광고 포함 표기), 수정 요청 횟수, 계약 해지, 비밀유지 조항을 포함한다.\n- 계약서는 초안이며 법률 자문이 아니라는 점을 note에 적는다. 조건, 계약, 콘텐츠의 최종 판단은 대표가 한다.\n- 한국어로 쓰고, 출력은 사용자 메시지에 있는 JSON 형식 하나만 출력한다. 코드블록, 인사말, 설명을 붙이지 않는다.",
+          "maxIterations": 5
+        }
+      }
+    },
+    {
+      "id": "98c95a36-96aa-4e59-8271-a28a97eaafa9",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        420,
+        240
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {
+          "temperature": 0.6,
+          "maxTokens": 4000
+        }
+      }
+    },
+    {
+      "id": "0478db9b-52a1-486f-a026-b18232ee02bf",
+      "name": "Calculator",
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        640,
+        240
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "c99e1529-b98c-4cf4-bb58-9a2236090095",
+      "name": "결과 검증",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        860,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// AI 응답에서 JSON만 안전하게 꺼내기\nfunction parseJson(t) {\n  t = String(t || '').replace(/```json/gi, '').replace(/```/g, '');\n  const s = t.indexOf('{'), e = t.lastIndexOf('}');\n  if (s < 0 || e < 0) throw new Error('JSON not found');\n  return JSON.parse(t.slice(s, e + 1));\n}\n\nconst out = $input.first().json.output;\nconst prep = $('요청 정리').first().json;\nlet data, checks = [];\ntry { data = parseJson(out); } catch (e) { data = { raw: String(out || '') }; checks.push({ ok: false, label: 'AI 응답 JSON 변환 실패 → 원문 표시' }); }\n\n// 검증: AI가 추천한 후보를 DB와 대조해서 팔로워·참여율·단가는 DB 값으로 덮어쓰기 (수치 오류 0건 목표)\nconst byHandle = Object.fromEntries(prep.candidates.map(c => [c.handle, c]));\nlet recs = Array.isArray(data.recommendations) ? data.recommendations : [];\nconst invented = recs.filter(r => !byHandle[r.handle]).map(r => r.handle);\nrecs = recs.filter(r => byHandle[r.handle]).map(r => ({ ...byHandle[r.handle], ...r,\n  followers: byHandle[r.handle].followers, engagement_rate: byHandle[r.handle].engagement_rate,\n  avg_cost: byHandle[r.handle].avg_cost, fit_score: byHandle[r.handle].fit_score }));\nif (invented.length) checks.push({ ok: false, label: `목록에 없는 후보 제거: ${invented.join(', ')}` });\nelse checks.push({ ok: true, label: '추천 후보 전원 DB 확인 완료, 수치는 DB 원본 사용' });\nif (!recs.length) recs = prep.candidates.slice(0, 3).map(c => ({ ...c, reason: '적합도 점수 기준 자동 추천', risk: '-', suggested_offer: '-' }));\ndata.recommendations = recs;\n\nconst total = recs.reduce((a, c) => a + c.avg_cost, 0);\nchecks.push(total <= prep.request.budget\n  ? { ok: true, label: `추천 3인 평균 단가 합계 ${total.toLocaleString()}원 ≤ 예산` }\n  : { ok: false, label: `추천 3인 단가 합계 ${total.toLocaleString()}원이 예산 초과 → 조합 조정 필요` });\n\nreturn [{ json: { ok: true, type: 'influencer', generated_at: new Date().toISOString(), elapsed_ms: Date.now() - prep.startedAt, checks, candidates: prep.candidates, data } }];\n"
+      }
+    },
+    {
+      "id": "2105ebe5-0a36-4dde-af0c-54a365d5646a",
+      "name": "Respond to Webhook (결과 보내기)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1080,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Webhook (프론트 요청 받기)": {
+      "main": [
+        [
+          {
+            "node": "요청 정리",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "요청 정리": {
+      "main": [
+        [
+          {
+            "node": "AI Agent 클로이",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent 클로이": {
+      "main": [
+        [
+          {
+            "node": "결과 검증",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "결과 검증": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook (결과 보내기)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent 클로이",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent 클로이",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false,
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

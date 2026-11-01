@@ -1,0 +1,208 @@
+{
+  "name": "Chloe 03 - 성과 분석·예산 조정",
+  "nodes": [
+    {
+      "id": "213ad968-e4cc-4bfc-ad54-a0deb5a6556d",
+      "name": "설명",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -260
+      ],
+      "parameters": {
+        "width": 1240,
+        "height": 200,
+        "content": "## Chloe 03 · 성과 분석\n프론트 → **Webhook** → 지표 계산(CTR·CVR·CPC·CPA·ROAS를 코드로 정확히 계산) → **AI Agent 클로이**(진단·개선 가설·예산 조정안) → 결과 검증(±20% 규칙 밖이면 '대표 승인 필요') → 응답"
+      }
+    },
+    {
+      "id": "8f5d7029-c04f-4793-883d-fa226a6c90df",
+      "name": "Webhook (프론트 요청 받기)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "c5f110cc-6d39-48b9-88ae-9de08b3317b0",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chloe-report",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      }
+    },
+    {
+      "id": "6af73932-e4fb-43ae-a69d-0e96c9448f89",
+      "name": "지표 계산",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// 프론트엔드(MVP)가 보낸 요청 본문 읽기\nconst raw = $input.first().json;\nlet b = raw.body ?? raw;\nif (typeof b === 'string') { try { b = JSON.parse(b); } catch (e) { b = {}; } }\nconst v = (x, d) => (x === undefined || x === null || x === '' ? d : x);\n\nconst r2 = x => (x === null || !isFinite(x)) ? null : Math.round(x * 100) / 100;\nconst div = (a, c) => (c > 0 ? a / c : null);\nconst pct = (a, c) => (c > 0 ? a / c * 100 : null);\n\nconst channels = (Array.isArray(b.channels) ? b.channels : []).map(c => {\n  const spend = Number(c.spend || 0), imp = Number(c.impressions || 0), clk = Number(c.clicks || 0),\n        conv = Number(c.conversions || 0), rev = Number(c.revenue || 0);\n  return {\n    name: c.name || '이름 없는 채널', spend, impressions: imp, clicks: clk, conversions: conv, revenue: rev,\n    ctr: r2(pct(clk, imp)), cvr: r2(pct(conv, clk)), cpc: r2(div(spend, clk)),\n    cpa: r2(div(spend, conv)), roas: r2(pct(rev, spend)),\n    enough_data: clk >= 100 && conv >= 10,\n  };\n});\nconst t = channels.reduce((a, c) => ({ spend: a.spend + c.spend, impressions: a.impressions + c.impressions, clicks: a.clicks + c.clicks, conversions: a.conversions + c.conversions, revenue: a.revenue + c.revenue }), { spend: 0, impressions: 0, clicks: 0, conversions: 0, revenue: 0 });\nconst totals = { ...t, ctr: r2(pct(t.clicks, t.impressions)), cvr: r2(pct(t.conversions, t.clicks)), cpc: r2(div(t.spend, t.clicks)), cpa: r2(div(t.spend, t.conversions)), roas: r2(pct(t.revenue, t.spend)) };\nconst total_budget = Number(v(b.total_budget, t.spend));\nconst campaign = v(b.campaign, '이번 캠페인');\nconst period = v(b.period, '최근 2주');\nconst target_roas = Number(v(b.target_roas, 300));\n\nconst fmt = x => (x === null ? '계산 불가' : x.toLocaleString());\nlet prompt = `아래 광고 성과를 진단하고 개선안을 작성해줘.\n\n[캠페인] ${campaign} / 기간: ${period} / 다음 기간 총예산: ${total_budget.toLocaleString()}원 / 목표 ROAS: ${target_roas}%\n\n[채널별 성과 — 코드로 계산된 값, 그대로 인용]\n${channels.map(c => `- ${c.name}: 광고비 ${fmt(c.spend)}원, 노출 ${fmt(c.impressions)}, 클릭 ${fmt(c.clicks)}, 전환 ${fmt(c.conversions)}, 매출 ${fmt(c.revenue)}원 | CTR ${fmt(c.ctr)}%, CVR ${fmt(c.cvr)}%, CPC ${fmt(c.cpc)}원, CPA ${fmt(c.cpa)}원, ROAS ${fmt(c.roas)}%${c.enough_data ? '' : ' | ⚠ 데이터 부족(클릭<100 또는 전환<10)'}`).join('\\n')}\n- 전체: 광고비 ${fmt(totals.spend)}원, 매출 ${fmt(totals.revenue)}원, CTR ${fmt(totals.ctr)}%, CVR ${fmt(totals.cvr)}%, CPA ${fmt(totals.cpa)}원, ROAS ${fmt(totals.roas)}%\n\n[출력 형식] 아래 JSON 구조 그대로, 값만 채워서 출력 (budget_adjustments의 current는 이번 기간 광고비):\n{\n  \"summary\": \"이번 기간 성과 한 줄 요약\",\n  \"diagnosis\": [ { \"channel\": \"채널명\", \"status\": \"good|warn|bad\", \"finding\": \"진단 내용(지표 인용)\" } ],\n  \"hypotheses\": [ { \"hypothesis\": \"개선 가설\", \"action\": \"다음에 해볼 실험\", \"expected_effect\": \"기대 효과\" } ],\n  \"budget_adjustments\": [ { \"channel\": \"채널명\", \"current\": 0, \"proposed\": 0, \"reason\": \"조정 이유\" } ],\n  \"next_actions\": [\"이번 주 할 일 1\", \"할 일 2\", \"할 일 3\"],\n  \"influencer_feedback\": \"다음 인플루언서 선정 시 반영할 점\"\n}`;\n\n// 대표의 수정 요청이 있으면 이전 결과와 함께 전달 (승인 → 수정 → 재승인 왕복 흐름)\nif (b.feedback) {\n  prompt += `\\n\\n[대표 수정 요청]\\n${b.feedback}\\n\\n[이전 결과]\\n${JSON.stringify(b.previous || {}).slice(0, 8000)}\\n\\n위 수정 요청을 반드시 반영해서, 같은 JSON 형식으로 전체 결과를 다시 작성해줘. 수정 요청과 관계없는 좋은 부분은 유지해.`;\n}\n\nreturn [{ json: { prompt, request: { campaign, period, total_budget, target_roas }, metrics: { channels, totals }, startedAt: Date.now() } }];\n"
+      }
+    },
+    {
+      "id": "c088c022-0a45-4fe6-8ef4-dbe88cd65a41",
+      "name": "AI Agent 클로이",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        500,
+        0
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.prompt }}",
+        "options": {
+          "systemMessage": "너는 '클로이(Chloe)'다. 소규모 브랜드 대표를 돕는 AI 마케팅 성과 분석 에이전트다.\n\n[역할]\n1. 코드로 미리 계산된 채널별 성과 지표(CTR, CVR, CPC, CPA, ROAS)를 해석해서 성과를 진단한다.\n2. 성과 차이의 원인에 대한 개선 가설과 다음 실험을 제안한다.\n3. 다음 기간의 채널별 예산 조정안을 제안한다.\n\n[원칙]\n- 지표 숫자는 사용자 메시지에 주어진 값을 그대로 인용한다. 직접 다시 계산하거나 새로운 숫자를 만들지 않는다.\n- '데이터 부족'으로 표시된 채널은 결론을 내리지 말고 '유지 후 추가 관찰'로 제안한다.\n- 예산 조정은 채널별 변경 폭 ±20% 이내, 조정 후 합계는 총예산 이하가 기본 규칙이다. 규칙을 넘는 제안이 꼭 필요하면 이유를 적는다(대표 승인 대상이 된다).\n- 진단 status는 good, warn, bad 중 하나로 쓴다.\n- 대표가 바로 이해할 수 있게 쉬운 한국어로, 전문용어에는 짧은 설명을 붙인다.\n- 출력은 사용자 메시지에 있는 JSON 형식 하나만 출력한다. 코드블록, 인사말, 설명을 붙이지 않는다.",
+          "maxIterations": 5
+        }
+      }
+    },
+    {
+      "id": "711efa85-db56-4491-abf3-2d8eaae0e025",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        420,
+        240
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {
+          "temperature": 0.4,
+          "maxTokens": 4000
+        }
+      }
+    },
+    {
+      "id": "8a5eebda-268c-4934-8add-45dd376006fb",
+      "name": "Calculator",
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        640,
+        240
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "b73b375a-e655-49a1-863b-85150fe9f4bc",
+      "name": "결과 검증",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        860,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// AI 응답에서 JSON만 안전하게 꺼내기\nfunction parseJson(t) {\n  t = String(t || '').replace(/```json/gi, '').replace(/```/g, '');\n  const s = t.indexOf('{'), e = t.lastIndexOf('}');\n  if (s < 0 || e < 0) throw new Error('JSON not found');\n  return JSON.parse(t.slice(s, e + 1));\n}\n\nconst out = $input.first().json.output;\nconst prep = $('지표 계산').first().json;\nlet data, checks = [];\ntry { data = parseJson(out); } catch (e) { data = { raw: String(out || '') }; checks.push({ ok: false, label: 'AI 응답 JSON 변환 실패 → 원문 표시' }); }\n\n// 운영 규칙 검사: 변경 폭 ±20%, 합계 ≤ 총예산, 데이터 부족 채널 증액 금지 → 위반 시 '대표 승인 필요'\nconst LIMIT = 20;\nconst chMap = Object.fromEntries(prep.metrics.channels.map(c => [c.name, c]));\nlet sum = 0;\n(data.budget_adjustments || []).forEach(a => {\n  const cur = Number(a.current || (chMap[a.channel] ? chMap[a.channel].spend : 0));\n  const pro = Number(a.proposed || 0);\n  a.current = cur; a.proposed = pro; sum += pro;\n  a.change_pct = cur > 0 ? Math.round((pro - cur) / cur * 1000) / 10 : null;\n  const reasons = [];\n  if (a.change_pct !== null && Math.abs(a.change_pct) > LIMIT) reasons.push(`변경 폭 ${a.change_pct}% (규칙 ±${LIMIT}%)`);\n  if (chMap[a.channel] && !chMap[a.channel].enough_data && pro > cur) reasons.push('데이터 부족 채널 증액');\n  a.needs_approval = reasons.length > 0;\n  a.approval_reason = reasons.join(', ');\n});\nif (sum > prep.request.total_budget) checks.push({ ok: false, label: `조정안 합계 ${sum.toLocaleString()}원 > 총예산 ${prep.request.total_budget.toLocaleString()}원 → 대표 승인 필요` });\nelse if (sum > 0) checks.push({ ok: true, label: `조정안 합계 ${sum.toLocaleString()}원 ≤ 총예산` });\nconst need = (data.budget_adjustments || []).filter(a => a.needs_approval).length;\nchecks.push(need ? { ok: false, label: `규칙 밖 조정 ${need}건 → 대표 승인 후 실행` } : { ok: true, label: '모든 조정이 자동 실행 범위(±20%) 안' });\nchecks.push({ ok: true, label: '지표는 코드로 계산 (AI 계산 아님)' });\n\nreturn [{ json: { ok: true, type: 'report', generated_at: new Date().toISOString(), elapsed_ms: Date.now() - prep.startedAt, checks, metrics: prep.metrics, data } }];\n"
+      }
+    },
+    {
+      "id": "64fc8a9c-48c8-45db-97b9-218b3fd73173",
+      "name": "Respond to Webhook (결과 보내기)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1080,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Webhook (프론트 요청 받기)": {
+      "main": [
+        [
+          {
+            "node": "지표 계산",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "지표 계산": {
+      "main": [
+        [
+          {
+            "node": "AI Agent 클로이",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent 클로이": {
+      "main": [
+        [
+          {
+            "node": "결과 검증",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "결과 검증": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook (결과 보내기)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent 클로이",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent 클로이",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false,
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

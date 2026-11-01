@@ -1,0 +1,208 @@
+{
+  "name": "Chloe 01 - 퍼포먼스 마케팅 (타겟·트렌드·광고소재)",
+  "nodes": [
+    {
+      "id": "290498e2-0eb7-4565-9188-1bbfa16f01a5",
+      "name": "설명",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -260
+      ],
+      "parameters": {
+        "width": 1240,
+        "height": 200,
+        "content": "## Chloe 01 · 퍼포먼스 마케팅\n프론트 → **Webhook** → 요청 정리(프롬프트 생성) → **AI Agent 클로이**(타겟·트렌드·예산·광고문구·KPI) → 결과 검증(예산 합계 보정, 과장표현 탐지) → 프론트로 응답\n\n⚠ 처음 한 번: `OpenAI Chat Model` 노드를 열어 Credential(OpenAI API 키)을 선택하세요."
+      }
+    },
+    {
+      "id": "0d36699c-e482-48f7-b243-f5ff0334ed8f",
+      "name": "Webhook (프론트 요청 받기)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "1261d0f9-2913-4ab0-9d42-374d8befb7f8",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chloe-performance",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      }
+    },
+    {
+      "id": "4f0481cd-2c27-4f2a-b624-3a0bd428a8fc",
+      "name": "요청 정리",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// 프론트엔드(MVP)가 보낸 요청 본문 읽기\nconst raw = $input.first().json;\nlet b = raw.body ?? raw;\nif (typeof b === 'string') { try { b = JSON.parse(b); } catch (e) { b = {}; } }\nconst v = (x, d) => (x === undefined || x === null || x === '' ? d : x);\n\nconst p = {\n  product: v(b.product, '이름 미입력 제품'),\n  category: v(b.category, '기타'),\n  price: Number(v(b.price, 0)),\n  features: v(b.features, ''),\n  target: v(b.target, ''),\n  budget: Number(v(b.budget, 1000000)),\n  goal: v(b.goal, '매출 증대'),\n  channels: Array.isArray(b.channels) && b.channels.length ? b.channels : ['인스타그램 광고', '네이버 검색광고'],\n  tone: v(b.tone, '친근하고 신뢰감 있게'),\n  influencer_assets: Array.isArray(b.influencer_assets) ? b.influencer_assets : [],\n};\n\nlet prompt = `아래 제품의 퍼포먼스 마케팅 계획을 작성해줘.\n\n[제품 정보]\n- 제품명: ${p.product}\n- 카테고리: ${p.category}\n- 판매가: ${p.price.toLocaleString()}원\n- 특징: ${p.features}\n- 대표가 생각하는 타겟: ${p.target}\n- 이번 달 광고 총예산: ${p.budget.toLocaleString()}원 (budget_plan의 amount 합계가 정확히 ${p.budget}이어야 함, ratio는 % 정수)\n- 목표: ${p.goal}\n- 사용할 매체: ${p.channels.join(', ')} (budget_plan과 ad_copies는 이 매체들만 사용)\n- 브랜드 톤: ${p.tone}\n- 사용 허가된 인플루언서 콘텐츠: ${p.influencer_assets.length ? p.influencer_assets.join(' / ') : '없음'}\n\n[출력 형식] 아래 JSON 구조 그대로, 값만 채워서 출력:\n{\n  \"summary\": \"한 줄 전략 요약\",\n  \"target_analysis\": {\n    \"primary_persona\": \"핵심 타겟 페르소나 설명\",\n    \"secondary_persona\": \"확장 타겟 페르소나 설명\",\n    \"pain_points\": [\"타겟의 고민 1\", \"고민 2\", \"고민 3\"],\n    \"insights\": [\"마케팅 인사이트 1\", \"인사이트 2\", \"인사이트 3\"]\n  },\n  \"trends\": [ { \"title\": \"트렌드 이름\", \"description\": \"제품과 연결되는 이유와 활용법\" } ],\n  \"budget_plan\": [ { \"channel\": \"매체명\", \"amount\": 0, \"ratio\": 0, \"reason\": \"배분 이유\" } ],\n  \"ad_copies\": [ { \"channel\": \"매체명\", \"headline\": \"헤드라인\", \"body\": \"본문\", \"cta\": \"행동 유도 문구\", \"image_prompt\": \"이미지/영상 컨셉 설명\" } ],\n  \"kpi_rules\": [ { \"metric\": \"지표명(CTR 등)\", \"target\": \"목표값\", \"rule\": \"이 조건이면 이렇게 조정\" } ],\n  \"checklist\": [\"표현·규격 검수 결과 1\", \"검수 결과 2\"]\n}\n\ntrends는 3개, ad_copies는 매체별 1개 이상, kpi_rules는 4개 이상, checklist는 3개 이상.`;\n\n// 대표의 수정 요청이 있으면 이전 결과와 함께 전달 (승인 → 수정 → 재승인 왕복 흐름)\nif (b.feedback) {\n  prompt += `\\n\\n[대표 수정 요청]\\n${b.feedback}\\n\\n[이전 결과]\\n${JSON.stringify(b.previous || {}).slice(0, 8000)}\\n\\n위 수정 요청을 반드시 반영해서, 같은 JSON 형식으로 전체 결과를 다시 작성해줘. 수정 요청과 관계없는 좋은 부분은 유지해.`;\n}\n\nreturn [{ json: { prompt, request: p, startedAt: Date.now() } }];\n"
+      }
+    },
+    {
+      "id": "251990c6-52be-4a60-b8ca-aa096e211139",
+      "name": "AI Agent 클로이",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        500,
+        0
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.prompt }}",
+        "options": {
+          "systemMessage": "너는 '클로이(Chloe)'다. 전담 마케터가 없는 소규모 브랜드 대표를 돕는 AI 퍼포먼스 마케팅 에이전트다.\n\n[역할]\n1. 제품 특성에 맞는 마케팅 타겟을 분석하고 트렌드 인사이트를 도출한다.\n2. 대표가 정한 예산 안에서 효율적인 매체별 예산 배분안을 제안한다.\n3. 매체별 광고 소재(헤드라인, 본문, CTA, 이미지 컨셉)를 만든다.\n4. 집행 후 무엇을 보고 언제 조정할지 KPI와 운영 규칙을 정한다.\n\n[원칙]\n- 대표가 입력한 제품 정보만 사실로 사용한다. 입력에 없는 효능, 수치, 수상 이력, 인증을 지어내지 않는다.\n- '최고', '1위', '100%', '완치', '부작용 없음'처럼 과장되거나 광고 심의에 걸리는 표현을 쓰지 않는다. 검수한 내용은 checklist에 남긴다.\n- 매체별 예산 합계는 입력된 총예산과 정확히 같아야 한다.\n- 트렌드는 실시간 검색 결과가 아니라 일반적으로 알려진 시장 경향에 근거한 '가설'이다. 그렇게 표현한다.\n- 인플루언서 협업 콘텐츠(사용 허가된 것)가 주어지면 광고 소재에 활용하는 안을 최소 1개 포함한다.\n- 대표가 바로 실행할 수 있게 구체적이고 짧게, 한국어로 쓴다.\n- 출력은 사용자 메시지에 있는 JSON 형식 하나만 출력한다. 코드블록, 인사말, 설명을 붙이지 않는다.",
+          "maxIterations": 5
+        }
+      }
+    },
+    {
+      "id": "eddebe9f-3b21-4f4d-8b0c-ebbf384bd02b",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        420,
+        240
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {
+          "temperature": 0.7,
+          "maxTokens": 4000
+        }
+      }
+    },
+    {
+      "id": "a1791096-0a46-4f94-b013-45616e6aadb4",
+      "name": "Calculator",
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        640,
+        240
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "30dd059b-fee0-4bd5-a37c-2a36f180d67a",
+      "name": "결과 검증",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        860,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// AI 응답에서 JSON만 안전하게 꺼내기\nfunction parseJson(t) {\n  t = String(t || '').replace(/```json/gi, '').replace(/```/g, '');\n  const s = t.indexOf('{'), e = t.lastIndexOf('}');\n  if (s < 0 || e < 0) throw new Error('JSON not found');\n  return JSON.parse(t.slice(s, e + 1));\n}\n\nconst out = $input.first().json.output;\nconst req = $('요청 정리').first().json;\nlet data, checks = [];\ntry { data = parseJson(out); } catch (e) { data = { raw: String(out || '') }; checks.push({ ok: false, label: 'AI 응답 JSON 변환 실패 → 원문 표시' }); }\n\n// 검증 1: 예산 합계가 총예산과 같은지 확인하고, 다르면 비율대로 자동 보정\nif (Array.isArray(data.budget_plan) && data.budget_plan.length) {\n  const sum = data.budget_plan.reduce((a, c) => a + Number(c.amount || 0), 0);\n  if (sum !== req.request.budget && sum > 0) {\n    let acc = 0;\n    data.budget_plan.forEach((c, i) => {\n      if (i === data.budget_plan.length - 1) c.amount = req.request.budget - acc;\n      else { c.amount = Math.round(Number(c.amount) / sum * req.request.budget / 1000) * 1000; acc += c.amount; }\n    });\n    checks.push({ ok: false, label: `예산 합계 불일치(${sum.toLocaleString()}원) → 총예산에 맞게 자동 보정` });\n  } else checks.push({ ok: true, label: '예산 합계 = 총예산 일치' });\n  data.budget_plan.forEach(c => { c.ratio = Math.round(Number(c.amount) / req.request.budget * 100); });\n}\n\n// 검증 2: 금지/과장 표현 탐지\nconst banned = ['최고', '1위', '100%', '완치', '부작용 없', '무조건', '기적'];\nconst text = JSON.stringify(data.ad_copies || []);\nconst hit = banned.filter(w => text.includes(w));\nchecks.push(hit.length ? { ok: false, label: `과장 의심 표현 발견: ${hit.join(', ')} → 대표 검토 필요` } : { ok: true, label: '과장·금지 표현 없음' });\n\nreturn [{ json: { ok: true, type: 'performance', generated_at: new Date().toISOString(), elapsed_ms: Date.now() - req.startedAt, checks, data } }];\n"
+      }
+    },
+    {
+      "id": "c5d19473-d407-47c8-8947-40249bf8510f",
+      "name": "Respond to Webhook (결과 보내기)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1080,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Webhook (프론트 요청 받기)": {
+      "main": [
+        [
+          {
+            "node": "요청 정리",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "요청 정리": {
+      "main": [
+        [
+          {
+            "node": "AI Agent 클로이",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent 클로이": {
+      "main": [
+        [
+          {
+            "node": "결과 검증",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "결과 검증": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook (결과 보내기)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent 클로이",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent 클로이",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false,
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}
