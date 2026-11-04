@@ -1,0 +1,3 @@
+# FINAL? local comparison engine (Python 3.9+)
+pymupdf>=1.24,<3
+numpy>=1.24

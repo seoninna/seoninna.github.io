@@ -1,0 +1,59 @@
+{
+  "_설명": "이 파일을 복사해 config.local.json 으로 저장한 뒤, root_dir / output_dir / local_api.token 세 값만 먼저 바꾸세요. config.local.json은 채팅·Git·ZIP에 올리지 마세요.",
+  "schema_version": "3.0",
+  "privacy_mode": "LOCAL_ONLY",
+  "root_dir": "REPLACE_WITH_YOUR_LOCAL_ARTWORK_ROOT",
+  "output_dir": "REPLACE_WITH_SEPARATE_LOCAL_OUTPUT_DIR",
+  "folder_names": {
+    "before": ["before", "원화 수정 전 before", "원화 수정 전", "수정 전", "수정전"],
+    "after": ["after", "원화 수정 후 after", "원화 수정 후", "수정 후", "수정후"]
+  },
+  "groups": [
+    {"category": "세트", "code": "SET", "folder_names": ["세트"], "before_dir": "", "after_dir": ""},
+    {"category": "단품", "code": "SINGLE", "folder_names": ["단품"], "before_dir": "", "after_dir": ""}
+  ],
+  "matching": {
+    "cross_category": false,
+    "auto_select_latest": false,
+    "human_confirmation_required": true,
+    "weak_similarity_threshold": 0.75
+  },
+  "file_rules": {
+    "stable_seconds": 120,
+    "ignore_patterns": ["~$*", ".*", "*.tmp", "*.part", "*.crdownload", "*.download", "*.partial"],
+    "file_size_warning_mb": 300,
+    "max_file_size_mb": 4096
+  },
+  "processing": {
+    "preview_dpi": 100,
+    "min_visual_dpi": 40,
+    "fine_crop_dpi": 300,
+    "max_page_pixels": 12000000,
+    "max_fine_crop_pixels": 4000000,
+    "max_pages_per_file": 400,
+    "page_timeout_seconds": 240,
+    "max_retries": 2,
+    "page_isolation": "process",
+    "ocr_enabled": false,
+    "artboard_hint": true,
+    "pdf_report": true
+  },
+  "text": {"position_tolerance_pt": 3.0, "line_match_ratio": 0.5, "max_match_distance_pt": 150.0},
+  "visual": {
+    "pixel_threshold": 48,
+    "tolerance_px": 0,
+    "pixel_threshold_after_shift": 64,
+    "tolerance_px_after_shift": 0,
+    "cell_px": 6,
+    "merge_gap_cells": 2,
+    "min_region_pixels": 6,
+    "max_regions_per_page": 150,
+    "canvas_shift_max_fraction": 0.25,
+    "move_match_score": 0.85,
+    "fine_crop_max_region_fraction": 0.05
+  },
+  "external": {"cloud_llm_enabled": false, "external_storage_enabled": false, "external_email_enabled": false},
+  "notification": {"safe_email_enabled": false, "approval_note": ""},
+  "local_api": {"host": "127.0.0.1", "port": 8765, "token": "CHANGE_ME_TO_A_LONG_RANDOM_STRING", "allow_non_loopback_bind": false},
+  "_threshold_note": "모든 수치는 제안값입니다. 실제 원화로 검증하기 전 정확도를 보장하지 않습니다."
+}

@@ -1,0 +1,484 @@
+{
+  "name": "FINAL? LOCAL_ONLY — 로컬 원화 자동 비교",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 10
+            }
+          ]
+        }
+      },
+      "id": "0f5b0b44-3b8b-5f54-9555-4adec3f1c28d",
+      "name": "01 Every 10 min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a9beabe4-9bf0-55c3-a6d1-4f11492f6caa",
+              "name": "api_base",
+              "value": "http://127.0.0.1:8765",
+              "type": "string"
+            },
+            {
+              "id": "d47b0408-0bd3-549c-b235-89f1971ad243",
+              "name": "mode",
+              "value": "LOCAL_ONLY",
+              "type": "string"
+            },
+            {
+              "id": "158efecf-3435-5d32-bfc3-11d4a5944b9a",
+              "name": "safe_notice_to",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "270e0b9f-57ac-52db-8d33-33048e109d6e",
+      "name": "02 Settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('02 Settings').first().json.api_base }}/scan",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({}) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "c5b7c966-a11e-5eb3-9711-199c4561b833",
+      "name": "03 Scan Pending (local API)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "pending",
+        "options": {}
+      },
+      "id": "138cecf8-28a7-5246-ab2d-a224109b34e2",
+      "name": "04 One item per pair",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('02 Settings').first().json.api_base }}/compare",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ pair_id: $json.pair_id, event_id: $json.event_id }) }}",
+        "options": {
+          "timeout": 3600000
+        }
+      },
+      "id": "85cf59c3-e07a-5588-8169-a5fb47541f38",
+      "name": "05 Compare pair (local API)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a89a56c1-2784-535b-b89b-6b459eee327e",
+              "leftValue": "={{ $json.ok === true && $json.status === 'COMPARED' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "1ab245be-357a-5c1a-8151-36ef85f76d04",
+      "name": "06 Compared?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1100,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1c49c34-9230-57b0-8cc0-a272d93ad04a",
+              "leftValue": "={{ $json.safe_email_enabled === true && $('02 Settings').first().json.safe_notice_to !== '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f9580112-6837-592d-9385-0db0474d9097",
+      "name": "07 Safe notice approved?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1320,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ $('02 Settings').first().json.safe_notice_to }}",
+        "subject": "={{ $json.safe_notification.subject }}",
+        "emailType": "html",
+        "message": "={{ $json.safe_notification.html }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "f700f67f-b003-5113-a517-28d79c2ed8a8",
+      "name": "08 Send SAFE notice (OFF)",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1540,
+        100
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "480f1d07-873e-566f-aa21-3aeba50e2d6b",
+              "leftValue": "={{ typeof $json.id === 'string' && $json.id.length > 0 && Array.isArray($json.labelIds) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6eded86f-0906-547f-8101-e25d87bf5c8c",
+      "name": "09 Gmail accepted?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1760,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('02 Settings').first().json.api_base }}/delivery",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ run_key: $('05 Compare pair (local API)').item.json.run_key, status: 'SENT_ACCEPTED_BY_PROVIDER', message_id: $json.id }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "796cd64b-65b8-585b-a410-40817d6edda5",
+      "name": "10 Record: SENT",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1980,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('02 Settings').first().json.api_base }}/delivery",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ run_key: $('05 Compare pair (local API)').item.json.run_key, status: 'LOCAL_ONLY_NOT_SENT' }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "7a0dd2f9-86d7-5e2b-a8bf-3c3b3f7cefe8",
+      "name": "11 Record: LOCAL ONLY (not sent)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1980,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Only non-sensitive codes are kept here.\nreturn { json: { ok: $json.ok === true, status: $json.status || null, error_code: $json.error_code || null, pair_id: $json.pair_id || null, retry_later: $json.retry_later === true } };\n"
+      },
+      "id": "1703a8e0-1cfc-5b06-89f8-e11f0b3c7bfa",
+      "name": "12 Not compared (codes only)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## FINAL? LOCAL_ONLY\n이 워크플로는 **내 PC에서 실행하는 n8n** 전용입니다 (Railway 불가).\nn8n은 파일을 직접 읽지 않고 `local_api.py`(127.0.0.1:8765)에 **pair_id만** 보냅니다.\n상세 보고서는 PC의 output_dir에만 저장됩니다.\n자격증명: Header Auth `X-FINAL-Token` = config의 local_api.token\n03·05·10·11 노드에 같은 자격증명을 선택하세요.",
+        "width": 620,
+        "height": 250,
+        "color": 4
+      },
+      "id": "0c92f9e8-7d6c-5413-b03b-87854a88bb46",
+      "name": "READ FIRST",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 08 메일 발송은 기본 OFF\n메일 발송도 외부 전송입니다.\n켜려면 (1) 회사 승인 확인 (2) config.local.json `notification.safe_email_enabled=true` + `approval_note` (3) 02 Settings `safe_notice_to` (4) 08 노드 Enable.\n보내는 내용은 문구·파일명 없는 **안전 요약**뿐입니다.\n로컬 저장만으로 '결과 전달' 과제 요건을 충족했다고 보지 않습니다.",
+        "width": 620,
+        "height": 250,
+        "color": 3
+      },
+      "id": "c9468e17-68e7-5ea0-b125-0251ea4138d5",
+      "name": "EXTERNAL SEND = OFF",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1480,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 자동 실행 증빙\nPublish/Activate 후 Schedule이 스스로 실행한 건만 '자동 실행'입니다.\n새 수정본을 after 폴더에 저장 → 10분 내 자동 비교 → Executions 캡처.\n결과가 없던 실행(대기 0건)은 결과물로 세지 마세요.",
+        "width": 620,
+        "height": 200,
+        "color": 5
+      },
+      "id": "ad7e3af5-7880-513e-aad9-b2d4309dd8ef",
+      "name": "EVIDENCE",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        640,
+        560
+      ]
+    }
+  ],
+  "connections": {
+    "01 Every 10 min": {
+      "main": [
+        [
+          {
+            "node": "02 Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02 Settings": {
+      "main": [
+        [
+          {
+            "node": "03 Scan Pending (local API)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03 Scan Pending (local API)": {
+      "main": [
+        [
+          {
+            "node": "04 One item per pair",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04 One item per pair": {
+      "main": [
+        [
+          {
+            "node": "05 Compare pair (local API)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05 Compare pair (local API)": {
+      "main": [
+        [
+          {
+            "node": "06 Compared?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "06 Compared?": {
+      "main": [
+        [
+          {
+            "node": "07 Safe notice approved?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "12 Not compared (codes only)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "07 Safe notice approved?": {
+      "main": [
+        [
+          {
+            "node": "08 Send SAFE notice (OFF)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "11 Record: LOCAL ONLY (not sent)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "08 Send SAFE notice (OFF)": {
+      "main": [
+        [
+          {
+            "node": "09 Gmail accepted?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "09 Gmail accepted?": {
+      "main": [
+        [
+          {
+            "node": "10 Record: SENT",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "11 Record: LOCAL ONLY (not sent)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Seoul",
+    "saveDataSuccessExecution": "all",
+    "saveDataErrorExecution": "all",
+    "saveManualExecutions": true
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

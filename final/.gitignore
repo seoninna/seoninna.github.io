@@ -1,0 +1,14 @@
+# Never commit real paths, results or keys
+config.local.json
+config.b.json
+*.private.json
+*.private.html
+*.private.pdf
+private_output/
+real_artwork/
+demo/
+.env
+.env.*
+*.log
+__pycache__/
+*.pyc

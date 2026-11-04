@@ -1,0 +1,22 @@
+{
+  "_설명": "APPROVED_EXTERNAL_B 전용. 외부 처리 허가 자료 또는 비기밀 재제작 자료만. 승인 기록이 비어 있으면 서비스가 시작되지 않습니다. root_dir/output_dir 를 넣으면 시작을 거부합니다.",
+  "privacy_mode": "APPROVED_EXTERNAL_B",
+  "approval": {
+    "approved_by": "",
+    "approved_at": "",
+    "scope_note": "",
+    "data_classification": "NON_CONFIDENTIAL_RECREATED_SAMPLE"
+  },
+  "service": {
+    "host": "127.0.0.1",
+    "port": 8780,
+    "token": "",
+    "max_upload_mb": 20,
+    "max_report_mb": 8,
+    "allowed_category_codes": [
+      "SET",
+      "SINGLE"
+    ]
+  },
+  "cloud_llm_enabled": false
+}

@@ -1,0 +1,15 @@
+{
+  "_설명": "APPROVED_EXTERNAL_B 전용 Drive 매니페스트 예시. 외부 처리 허가 자료/비기밀 재제작 자료만 등록하세요.",
+  "pairs": [
+    {
+      "category_code": "SET",
+      "artwork_id": "DEMO01",
+      "approved_for_external": true,
+      "approval_reference": "비기밀 재제작 샘플 (발표용)",
+      "baseline_file_id": "<Drive의 기준본 PDF 파일 ID>",
+      "expected_after_filename": "DEMO01_after.pdf",
+      "requests": {"requests": [], "protected_fields": []},
+      "page_map": []
+    }
+  ]
+}

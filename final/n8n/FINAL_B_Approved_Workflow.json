@@ -1,0 +1,630 @@
+{
+  "name": "FINAL? APPROVED_EXTERNAL_B — 승인 자료 전용 Gmail+Drive",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "q": "in:inbox subject:FINALCHECK has:attachment filename:pdf -subject:FINALRESULT -label:FINAL_DONE",
+          "readStatus": "both"
+        },
+        "options": {
+          "downloadAttachments": true,
+          "dataPropertyAttachmentsPrefixName": "attachment_"
+        }
+      },
+      "id": "ce3d8130-ad97-53c8-a542-5bcdc484f0fe",
+      "name": "01 Gmail: new revision",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6dd1fc0a-459f-5615-80e0-4541c5cc3112",
+              "name": "b_mode_enabled",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "f276dcc6-e74a-5fb9-b990-f394d7e761b2",
+              "name": "approval_note",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "90bb5b8b-a749-5c60-954c-33856601903f",
+              "name": "report_to",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "9dd8235b-8561-51ba-b82e-6d28b0115326",
+              "name": "allowed_sender",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "d5962f5a-b6d0-5c31-b3a6-07e1f2bd80d8",
+              "name": "manifest_file_id",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "076c75dd-93e6-5f22-8b26-f7507ff11366",
+              "name": "b_service_url",
+              "value": "https://REPLACE-WITH-YOUR-B-SERVICE/b/compare",
+              "type": "string"
+            },
+            {
+              "id": "d40c6d9a-8826-5fca-a501-32993b7278f5",
+              "name": "max_attachment_mb",
+              "value": 20,
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "270e0b9f-57ac-52db-8d33-33048e109d6e",
+      "name": "02 Settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// APPROVED_EXTERNAL_B only. Refuses to run until the approval gate is filled.\nconst s = $('02 Settings').first().json;\nconst item = $('01 Gmail: new revision').item;\nconst j = item.json;\nconst errors = [];\nif (s.b_mode_enabled !== true) throw new Error('B_MODE_DISABLED: 02 Settings b_mode_enabled=true 와 approval_note 를 채우기 전에는 실행하지 않습니다.');\nif (String(s.approval_note || '').trim().length < 5) throw new Error('B_APPROVAL_NOTE_REQUIRED');\nif (!/^[^\\s@,;]+@[^\\s@,;]+\\.[^\\s@,;]+$/.test(String(s.report_to || ''))) throw new Error('SET_REPORT_TO_IN_SETTINGS');\nfunction header(name) { const h = j.headers || {}; return String(h[name] || h[name.toLowerCase()] || j[name] || ''); }\nconst subject = String(j.subject || header('subject') || '').trim();\nconst from = String((j.from && (j.from.value?.[0]?.address || j.from.text)) || header('from') || '');\nif (s.allowed_sender && !from.toLowerCase().includes(String(s.allowed_sender).toLowerCase())) errors.push('SENDER_NOT_ALLOWED');\nconst m = subject.match(/^FINALCHECK\\s*\\|\\s*(SET|SINGLE)\\s*\\|\\s*([A-Za-z0-9_.-]{1,40})\\s*$/);\nif (!m) errors.push('SUBJECT_FORMAT: FINALCHECK | SET 또는 SINGLE | 원화ID');\nconst pdfKeys = Object.keys(item.binary || {}).filter(k => /\\.pdf$/i.test(item.binary[k].fileName || '') || item.binary[k].mimeType === 'application/pdf');\nif (pdfKeys.length !== 1) errors.push('EXACTLY_ONE_PDF_ATTACHMENT_REQUIRED');\nlet size = null;\nif (pdfKeys.length === 1) {\n  const buf = await this.helpers.getBinaryDataBuffer($itemIndex, pdfKeys[0]);\n  size = buf.length;\n  if (size > Number(s.max_attachment_mb) * 1024 * 1024) errors.push('ATTACHMENT_OVER_LIMIT_NOT_TRUNCATED');\n}\nreturn { json: { valid: errors.length === 0, errors, category_code: m?.[1] || null, artwork_id: m?.[2] || null,\n  attachment_key: pdfKeys[0] || null, attachment_name: pdfKeys[0] ? item.binary[pdfKeys[0]].fileName : null,\n  attachment_bytes: size, source_message_id: j.id, report_to: s.report_to, started_at: new Date().toISOString(),\n  execution_id: $execution.id } };\n"
+      },
+      "id": "910f9884-58c9-5c2f-bdce-f953602b669d",
+      "name": "03 Validate input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f20db3d5-26a2-596f-8ecc-c26050bdeec1",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "620ed45f-6f43-58d0-8a34-bfeccf095039",
+      "name": "04 Input OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('02 Settings').first().json.manifest_file_id }}",
+          "mode": "id"
+        },
+        "options": {
+          "binaryPropertyName": "manifest"
+        }
+      },
+      "id": "c44e8867-6824-5e1b-a2fe-bd45c093b7ed",
+      "name": "05 Download approved manifest",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        880,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "fromJson",
+        "binaryPropertyName": "manifest",
+        "destinationKey": "manifest",
+        "options": {}
+      },
+      "id": "7f875093-10c7-5737-870f-09e6774139cb",
+      "name": "06 Read manifest JSON",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Explicit pair lookup in the approved manifest (no name search, no 'latest file').\nconst ctx = $('03 Validate input').item.json;\nconst man = $json.manifest || {};\nconst errors = [];\nconst hits = (man.pairs || []).filter(p => p.category_code === ctx.category_code && p.artwork_id === ctx.artwork_id);\nif (hits.length !== 1) errors.push(`MANIFEST_MATCHES_${hits.length}_EXPECTED_1`);\nconst p = hits[0] || {};\nif (hits.length === 1 && p.approved_for_external !== true) errors.push('PAIR_NOT_APPROVED_FOR_EXTERNAL_PROCESSING');\nif (hits.length === 1 && !p.baseline_file_id) errors.push('BASELINE_FILE_ID_MISSING');\nif (hits.length === 1 && p.expected_after_filename && p.expected_after_filename !== ctx.attachment_name) errors.push('ATTACHMENT_NAME_DIFFERS_FROM_MANIFEST');\nreturn { json: { ...ctx, valid: errors.length === 0, errors: [...(ctx.errors || []), ...errors],\n  baseline_file_id: p.baseline_file_id || null, requests_json: p.requests ? JSON.stringify(p.requests) : '',\n  page_map_json: p.page_map ? JSON.stringify(p.page_map) : '' } };\n"
+      },
+      "id": "096c9cf6-3144-577d-8102-0c089c89cb3f",
+      "name": "07 Lookup pair in manifest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1a72f740-2365-515f-862d-fb8f80f82a72",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "888e0bf5-cf7d-5957-82f5-c2483c683fe5",
+      "name": "08 Pair OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1540,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.baseline_file_id }}",
+          "mode": "id"
+        },
+        "options": {
+          "binaryPropertyName": "before"
+        }
+      },
+      "id": "66213516-8c7f-5cf1-bed8-e1e5422e0f00",
+      "name": "09 Download baseline (before)",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1760,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const ctx = $('07 Lookup pair in manifest').item.json;\nconst trig = $('01 Gmail: new revision').item;\nreturn { json: ctx, binary: { before: $input.item.binary.before, after: trig.binary[ctx.attachment_key] } };\n"
+      },
+      "id": "63380075-e02a-5a63-a771-dfe89a2be134",
+      "name": "10 Attach before + after",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1980,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('02 Settings').first().json.b_service_url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "before",
+              "inputDataFieldName": "before"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "after",
+              "inputDataFieldName": "after"
+            },
+            {
+              "name": "category_code",
+              "value": "={{ $json.category_code }}"
+            },
+            {
+              "name": "artwork_id",
+              "value": "={{ $json.artwork_id }}"
+            },
+            {
+              "name": "requests_json",
+              "value": "={{ $json.requests_json }}"
+            },
+            {
+              "name": "page_map_json",
+              "value": "={{ $json.page_map_json }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 900000,
+          "response": {
+            "response": {
+              "responseFormat": "json",
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "c389b87a-3aa7-515c-a6de-ebada7b88a89",
+      "name": "11 B compare service",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2200,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const ctx = $('07 Lookup pair in manifest').item.json;\nconst r = $json;\nconst ok = r.ok === true;\nconst n = r.notification || {};\nconst subject = ok ? `FINALRESULT | ${ctx.category_code} | ${ctx.artwork_id} | ${r.summary.overall_status}`\n                   : `FINALRESULT | ${ctx.category_code} | ${ctx.artwork_id} | NOT_COMPARED ${r.error_code || ''}`;\nconst html = ok ? (n.html + '<p>첨부 HTML 보고서를 브라우저로 여세요. 최종 승인이 아닙니다.</p>')\n                : `<p>비교하지 못했습니다: ${r.error_code || 'UNKNOWN'}. 결과를 '변경 없음'으로 해석하지 마세요.</p>`;\nconst fallback = Buffer.from(`<!doctype html><meta charset=\"utf-8\"><p>NOT_COMPARED: ${r.error_code || 'UNKNOWN'}</p>`).toString('base64');\nreturn { json: { ...ctx, subject, html, compare_ok: ok, overall_status: r.summary?.overall_status || null,\n  summary: r.summary || null, compare_error: r.error_code || null },\n  binary: { audit_report: { data: (ok && r.report_html_b64) ? r.report_html_b64 : fallback, mimeType: 'text/html',\n  fileName: `FINAL_${ctx.category_code}_${ctx.artwork_id}.html` } } };\n"
+      },
+      "id": "2d435bc3-c573-5ea2-9dca-8d68d2197eb0",
+      "name": "12 Compose result mail",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2420,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ $('02 Settings').first().json.report_to }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "html",
+        "message": "={{ $json.html }}",
+        "options": {
+          "appendAttribution": false,
+          "senderName": "FINAL? 원화 검수",
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {
+                "property": "audit_report"
+              }
+            ]
+          }
+        }
+      },
+      "id": "e038c3c4-eb77-50a7-9619-642cdbb0f262",
+      "name": "13 Send result to me",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2640,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "addLabels",
+        "messageId": "={{ $('03 Validate input').item.json.source_message_id }}",
+        "labelIds": []
+      },
+      "id": "c4f84f9f-a18b-507e-b987-9c6811772837",
+      "name": "14 Mark processed (label)",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2860,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "let prep;\ntry { prep = $('12 Compose result mail').item.json; } catch (e) { prep = $('E Input/pair problem mail').item.json; }\nconst sent = $('13 Send result to me').item.json;\nreturn { json: { execution_id: prep.execution_id, mode: 'APPROVED_EXTERNAL_B', category_code: prep.category_code,\n  artwork_id: prep.artwork_id, compare_ok: prep.compare_ok, overall_status: prep.overall_status,\n  delivery: { status: sent.id ? 'SENT_ACCEPTED_BY_GMAIL' : 'DELIVERY_RESPONSE_REQUIRES_CHECK', gmail_id: sent.id || null },\n  receipt_confirmed: 'CHECK_INBOX_MANUALLY', llm_tokens: 'NOT_CALLED', finished_at: new Date().toISOString() } };\n"
+      },
+      "id": "bd56d834-a11e-5b1d-8b28-3e7637ae7e49",
+      "name": "15 Execution log",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3080,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const j = $json;\nconst list = (j.errors || []).map(e => `<li>${String(e).replace(/[<>&]/g, '')}</li>`).join('');\nconst html = `<p>입력 확인이 필요합니다 (비교하지 않음 — '변경 없음'이 아닙니다):</p><ul>${list}</ul>`;\nreturn { json: { ...j, subject: `FINALRESULT | INPUT CHECK | ${j.category_code || '-'} | ${j.artwork_id || '-'}`, html,\n  compare_ok: false, overall_status: null },\n  binary: { audit_report: { data: Buffer.from('<!doctype html><meta charset=\"utf-8\">' + html).toString('base64'),\n  mimeType: 'text/html', fileName: 'FINAL_INPUT_CHECK.html' } } };\n"
+      },
+      "id": "5a4a7855-3b39-5b48-a0ef-51be93b23dc2",
+      "name": "E Input/pair problem mail",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1760,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## APPROVED_EXTERNAL_B — 기본 OFF\n**외부 처리 허가를 받은 자료 또는 비기밀 재제작 자료만** 사용합니다.\n회사 원화를 개인 Gmail/Drive/Railway로 보내지 마세요. 로컬 워크플로와 섞지 마세요.\n02 Settings: b_mode_enabled=true, approval_note(승인 근거), report_to, allowed_sender, manifest_file_id, b_service_url\n자격증명: Gmail(01·13·14), Google Drive(05·09), Header Auth X-FINAL-Token(11)\n14 노드에서 FINAL_DONE 라벨 선택.",
+        "width": 760,
+        "height": 280,
+        "color": 3
+      },
+      "id": "b166fcca-531f-5ba6-a736-e057508a8079",
+      "name": "READ FIRST (B)",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -300
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Drive의 manifest_b.json (승인 자료 전용)\n`{\"pairs\":[{\"category_code\":\"SET\",\"artwork_id\":\"DEMO01\",\"approved_for_external\":true,\"baseline_file_id\":\"<Drive 파일 ID>\",\"expected_after_filename\":\"DEMO01_after.pdf\"}]}`\n메일 제목: `FINALCHECK | SET | DEMO01` + PDF 1개 첨부.\n제목만 믿지 않고 manifest의 짝·파일명과 대조합니다.",
+        "width": 760,
+        "height": 280,
+        "color": 6
+      },
+      "id": "cef3675e-9f4d-5dce-a152-8ed555069525",
+      "name": "MANIFEST (B)",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        860,
+        -300
+      ]
+    }
+  ],
+  "connections": {
+    "01 Gmail: new revision": {
+      "main": [
+        [
+          {
+            "node": "02 Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "02 Settings": {
+      "main": [
+        [
+          {
+            "node": "03 Validate input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "03 Validate input": {
+      "main": [
+        [
+          {
+            "node": "04 Input OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "04 Input OK?": {
+      "main": [
+        [
+          {
+            "node": "05 Download approved manifest",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "E Input/pair problem mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "05 Download approved manifest": {
+      "main": [
+        [
+          {
+            "node": "06 Read manifest JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "06 Read manifest JSON": {
+      "main": [
+        [
+          {
+            "node": "07 Lookup pair in manifest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "07 Lookup pair in manifest": {
+      "main": [
+        [
+          {
+            "node": "08 Pair OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "08 Pair OK?": {
+      "main": [
+        [
+          {
+            "node": "09 Download baseline (before)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "E Input/pair problem mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "09 Download baseline (before)": {
+      "main": [
+        [
+          {
+            "node": "10 Attach before + after",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10 Attach before + after": {
+      "main": [
+        [
+          {
+            "node": "11 B compare service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11 B compare service": {
+      "main": [
+        [
+          {
+            "node": "12 Compose result mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12 Compose result mail": {
+      "main": [
+        [
+          {
+            "node": "13 Send result to me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E Input/pair problem mail": {
+      "main": [
+        [
+          {
+            "node": "13 Send result to me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "13 Send result to me": {
+      "main": [
+        [
+          {
+            "node": "14 Mark processed (label)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14 Mark processed (label)": {
+      "main": [
+        [
+          {
+            "node": "15 Execution log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Seoul",
+    "saveDataSuccessExecution": "all",
+    "saveDataErrorExecution": "all"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

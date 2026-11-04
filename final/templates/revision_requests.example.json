@@ -1,0 +1,22 @@
+{
+  "_설명": "수정 요청서 예시(가상). 파일 이름은 <pair_id>.json 으로 output_dir/requests/ 에 둡니다. 요청이 없으면 이 파일을 만들지 마세요 (변경 사실만 보고). before/after 차이를 보고 요청을 만들어 넣지 마세요.",
+  "schema_version": "3.0",
+  "pair_id": "SET_0123456789",
+  "category": "세트",
+  "artwork_id": "내가_정한_원화ID",
+  "baseline_content_sha256": "pair_manifest.local.json 의 before_content_sha256 값을 복사",
+  "requests": [
+    {"request_id": "R1", "requested_by": "BM", "source_reference": "2026-11-01 메일", "operation": "replace",
+     "page": 1, "region": null, "context": "내용량", "before_value": "50ml", "after_value": "60ml"},
+    {"request_id": "R2", "requested_by": "DESIGNER", "source_reference": "2026-11-02 메일", "operation": "delete",
+     "page": 1, "before_value": "삭제할 문구"},
+    {"request_id": "R3", "requested_by": "BM", "operation": "add", "page": 2, "after_value": "추가할 문구"},
+    {"request_id": "R4", "requested_by": "DESIGNER", "operation": "visual_note", "page": 1, "region": [300, 30, 380, 70],
+     "after_value": "로고를 오른쪽으로 5mm 이동"}
+  ],
+  "protected_fields": [
+    {"field_id": "P1", "value": "사용기한 2027.11.04", "page": 1, "previous_values": ["사용기한 2026.11.04"]}
+  ],
+  "_operation_종류": "replace(바꾸기) / delete(삭제) / add(추가) / keep(유지) / visual_note(시각 요청 - 자동 판정 안 함)",
+  "_region_단위": "[x0, y0, x1, y1] pt, 페이지 왼쪽 위 기준 (1pt = 0.3528mm). 보고서의 좌표를 그대로 쓸 수 있습니다."
+}
