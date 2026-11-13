@@ -2,6 +2,7 @@
 records. Used by compare_engine.py (CLI) and local_api.py (n8n bridge)."""
 from __future__ import annotations
 
+import base64
 import os
 import re
 import shutil
@@ -210,10 +211,20 @@ def run_pair(cfg: dict[str, Any], pair_id: str, event_id: str | None = None, for
                                        overall_status=rep["overall_status"], failed_pages=failed)
         save_ledger(cfg, ledger)
     subject, text, html_body = report.safe_notification(summ)
-    return {"ok": True, "status": "COMPARED", "pair_id": pair_id, "run_key": run_key, "summary": summ,
-            "delivery_status": "NOT_SENT",
-            "safe_email_enabled": bool(cfg["notification"].get("safe_email_enabled")),
-            "safe_notification": {"subject": subject, "text": text, "html": html_body}}
+    out = {"ok": True, "status": "COMPARED", "pair_id": pair_id, "run_key": run_key, "summary": summ,
+           "delivery_status": "NOT_SENT",
+           "safe_email_enabled": bool(cfg["notification"].get("safe_email_enabled")),
+           "email_detail": "SAFE_SUMMARY",
+           "safe_notification": {"subject": subject, "text": text, "html": html_body}}
+    note = cfg["notification"]
+    if note.get("safe_email_enabled") and note.get("email_detail") == "FULL_REPORT":
+        full = (report_dir / "report.private.html").read_text(encoding="utf-8")
+        full, dropped = report.inline_images(full, report_dir / "images",
+                                             int(float(note.get("max_report_mb", 8)) * 1024 * 1024))
+        out["email_detail"] = "FULL_REPORT"
+        out["report_html_b64"] = base64.b64encode(full.encode("utf-8")).decode()
+        out["report_images_omitted_for_size"] = dropped
+    return out
 
 
 def find_pending(cfg: dict[str, Any]) -> dict[str, Any]:

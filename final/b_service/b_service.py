@@ -76,26 +76,6 @@ def load_b_config(path: str) -> dict[str, Any]:
     return cfg
 
 
-def inline_images(html_text: str, image_dir: Path, max_bytes: int) -> tuple[str, bool]:
-    total = 0
-    dropped = False
-
-    def repl(m: re.Match[str]) -> str:
-        nonlocal total, dropped
-        f = image_dir / m.group(1)
-        try:
-            data = f.read_bytes()
-        except OSError:
-            return m.group(0)
-        if total + len(data) > max_bytes:
-            dropped = True
-            return "src='' data-omitted='size-limit'"
-        total += len(data)
-        return "src='data:image/png;base64," + base64.b64encode(data).decode() + "'"
-
-    return re.sub(r"src='images/([^']+)'", repl, html_text), dropped
-
-
 def parse_multipart(content_type: str, body: bytes) -> dict[str, Any]:
     msg = BytesParser(policy=email_policy).parsebytes(b"Content-Type: " + content_type.encode() + b"\r\n\r\n" + body)
     if not msg.is_multipart():
@@ -153,7 +133,7 @@ def compare_upload(cfg: dict[str, Any], fields: dict[str, Any]) -> dict[str, Any
                                    cache_dir=None)
         run_key = short_hash(pair["pair_id"], 16)
         summ = report.safe_summary(rep, run_key, mode=B_MODE)
-        html_text, dropped = inline_images(report.build_html(rep), work / "report" / "images",
+        html_text, dropped = report.inline_images(report.build_html(rep), work / "report" / "images",
                                            int(cfg["b"]["max_report_mb"] * 1024 * 1024))
         subject, text, body = report.safe_notification(summ)
         return {"ok": True, "mode": B_MODE, "pair_id": pair["pair_id"], "summary": summ,

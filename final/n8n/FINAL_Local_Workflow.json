@@ -185,22 +185,44 @@
     },
     {
       "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Mail body = safe summary. A full report is attached only when the local API\n// returned one (config email_detail=FULL_REPORT + non-confidential declaration).\nconst j = $json;\nconst n = j.safe_notification || {};\nconst full = j.email_detail === 'FULL_REPORT' && j.report_html_b64;\nconst note = full ? '<p>첨부: 상세 보고서(HTML). 브라우저로 여세요. 최종 승인이 아닙니다.</p>'\n                  : '<p>상세 보고서는 PC의 결과 폴더에만 있습니다. 최종 승인이 아닙니다.</p>';\nconst fallback = Buffer.from('<!doctype html><meta charset=\"utf-8\">' + (n.html || '')).toString('base64');\nreturn { json: { ...j, report_html_b64: undefined, mail_subject: n.subject, mail_html: (n.html || '') + note },\n  binary: { report: { data: full ? j.report_html_b64 : fallback, mimeType: 'text/html',\n    fileName: `FINAL_${j.pair_id}_${j.run_key}.html` } } };\n"
+      },
+      "id": "ad00e0e9-4727-5f43-9a02-493d2cda1dec",
+      "name": "07b Build mail + attachment",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1430,
+        100
+      ]
+    },
+    {
+      "parameters": {
         "resource": "message",
         "operation": "send",
         "sendTo": "={{ $('02 Settings').first().json.safe_notice_to }}",
-        "subject": "={{ $json.safe_notification.subject }}",
+        "subject": "={{ $json.mail_subject }}",
         "emailType": "html",
-        "message": "={{ $json.safe_notification.html }}",
+        "message": "={{ $json.mail_html }}",
         "options": {
-          "appendAttribution": false
+          "appendAttribution": false,
+          "senderName": "FINAL? 원화 검수",
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {
+                "property": "report"
+              }
+            ]
+          }
         }
       },
-      "id": "f700f67f-b003-5113-a517-28d79c2ed8a8",
-      "name": "08 Send SAFE notice (OFF)",
+      "id": "da4dfc75-f901-5daf-abae-d6686a08fce5",
+      "name": "08 Send result mail (OFF)",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
       "position": [
-        1540,
+        1600,
         100
       ],
       "disabled": true
@@ -235,7 +257,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1760,
+        1780,
         100
       ]
     },
@@ -315,7 +337,7 @@
     },
     {
       "parameters": {
-        "content": "## 08 메일 발송은 기본 OFF\n메일 발송도 외부 전송입니다.\n켜려면 (1) 회사 승인 확인 (2) config.local.json `notification.safe_email_enabled=true` + `approval_note` (3) 02 Settings `safe_notice_to` (4) 08 노드 Enable.\n보내는 내용은 문구·파일명 없는 **안전 요약**뿐입니다.\n로컬 저장만으로 '결과 전달' 과제 요건을 충족했다고 보지 않습니다.",
+        "content": "## 08 메일 발송은 기본 OFF\n메일 발송도 외부 전송입니다.\n켜려면 (1) 승인/비기밀 확인 (2) config.local.json `notification.safe_email_enabled=true` + `approval_note` (3) 02 Settings `safe_notice_to` (4) 08 노드 Enable + Gmail 자격증명.\n기본 내용은 문구·파일명 없는 **안전 요약**. 비기밀 자료만 `email_detail=FULL_REPORT`로 보고서 첨부.\n로컬 저장만으로 '결과 전달' 과제 요건을 충족했다고 보지 않습니다.",
         "width": 620,
         "height": 250,
         "color": 3
@@ -424,7 +446,7 @@
       "main": [
         [
           {
-            "node": "08 Send SAFE notice (OFF)",
+            "node": "07b Build mail + attachment",
             "type": "main",
             "index": 0
           }
@@ -438,7 +460,18 @@
         ]
       ]
     },
-    "08 Send SAFE notice (OFF)": {
+    "07b Build mail + attachment": {
+      "main": [
+        [
+          {
+            "node": "08 Send result mail (OFF)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "08 Send result mail (OFF)": {
       "main": [
         [
           {

@@ -298,6 +298,9 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "notification": {
         "safe_email_enabled": False,
         "approval_note": "",
+        "email_detail": "SAFE_SUMMARY",
+        "non_confidential_declared_by": "",
+        "max_report_mb": 8,
     },
     "local_api": {
         "host": "127.0.0.1",
@@ -345,6 +348,15 @@ def validate_local_config(raw: dict[str, Any]) -> dict[str, Any]:
     note = cfg["notification"]
     if note.get("safe_email_enabled") and len(str(note.get("approval_note") or "").strip()) < 5:
         raise FinalError("SAFE_EMAIL_REQUIRES_APPROVAL_NOTE")
+    if note.get("email_detail", "SAFE_SUMMARY") not in ("SAFE_SUMMARY", "FULL_REPORT"):
+        raise FinalError("EMAIL_DETAIL_MUST_BE_SAFE_SUMMARY_OR_FULL_REPORT")
+    if note.get("email_detail") == "FULL_REPORT":
+        # Full report = artwork text and crops leave the PC. Only for data the user
+        # declares non-confidential (test / recreated samples), never by default.
+        if not note.get("safe_email_enabled"):
+            raise FinalError("FULL_REPORT_EMAIL_REQUIRES_SAFE_EMAIL_ENABLED")
+        if len(str(note.get("non_confidential_declared_by") or "").strip()) < 2:
+            raise FinalError("FULL_REPORT_EMAIL_REQUIRES_NON_CONFIDENTIAL_DECLARATION")
     groups = cfg.get("groups")
     if not isinstance(groups, list) or len(groups) < 2:
         raise FinalError("EXPECTED_SET_AND_SINGLE_GROUPS")

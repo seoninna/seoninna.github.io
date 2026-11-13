@@ -9,7 +9,9 @@ notification. Whether even these may leave the PC is the user's decision.
 """
 from __future__ import annotations
 
+import base64
 import html
+import re
 from pathlib import Path
 from typing import Any
 
@@ -306,3 +308,23 @@ def write_pdf(rep: dict[str, Any], report_dir: Path) -> str:
         return "WRITTEN" if not more else "TRUNCATED_AT_400_PAGES"
     except Exception as err:  # noqa: BLE001
         return f"FAILED_{type(err).__name__}"
+
+
+def inline_images(html_text: str, image_dir: Path, max_bytes: int) -> tuple[str, bool]:
+    """Embed report images as data URIs (size-capped) for a self-contained HTML file."""
+    total = 0
+    dropped = False
+
+    def repl(m: "re.Match[str]") -> str:
+        nonlocal total, dropped
+        try:
+            data = (image_dir / m.group(1)).read_bytes()
+        except OSError:
+            return m.group(0)
+        if total + len(data) > max_bytes:
+            dropped = True
+            return "src='' data-omitted='size-limit'"
+        total += len(data)
+        return "src='data:image/png;base64," + base64.b64encode(data).decode() + "'"
+
+    return re.sub(r"src='images/([^']+)'", repl, html_text), dropped

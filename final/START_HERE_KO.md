@@ -13,7 +13,7 @@
 | 항목 | 상태 |
 |---|---|
 | 비교 프로그램 코드 (사전점검·짝 매칭·텍스트/숫자/시각 비교·보고서) | 작성 완료 |
-| 합성(가상) PDF 자동 테스트 38건 | 통과 — `docs/TEST_RESULTS.md` |
+| 합성(가상) PDF 자동 테스트 40건 | 통과 — `docs/TEST_RESULTS.md` |
 | **실제 회사 원화로 실행** | **아직 안 함** (본인 PC에서 직접 실행해야 함) |
 | n8n 워크플로 | JSON 작성 완료. 실행 검증 범위는 `docs/TEST_RESULTS.md` 참고 |
 | 메일 발송·자동 실행 4회 | **미검증** (본인 환경에서 해야 함) |
@@ -219,6 +219,7 @@ python3 local_api.py --config config.local.json
 ### 결과 전달 (과제 요건과 관계)
 - 기본: 결과는 **PC의 로컬 보고서**로만 남습니다. 이것만으로는 과제의 "메일 등 결과 전달" 요건을 **충족했다고 볼 수 없습니다.**
 - 선택 1 — **안전 요약 메일** (문구·파일명·경로 없음, pair_id와 건수만): 메일도 외부 전송이므로 **승인 확인 후** ① `config.local.json` 의 `notification.safe_email_enabled: true`, `approval_note`(승인 근거) ② n8n 02 Settings `safe_notice_to` ③ 08 노드 Enable + Gmail 자격증명.
+- 과제용 **자동 결과 메일 5통**(비기밀·합성 자료): `docs/AUTO_MAIL_5_RUNS_KO.md` 순서대로.
 - 선택 2 — **B안 (APPROVED_EXTERNAL_B)**: 외부 처리 허가 자료 또는 **비기밀 재제작 자료**만 Gmail+Drive+비교 서비스로 처리 → `n8n/FINAL_B_Approved_Workflow.json`, `b_service/README_B_KO.md`. 회사 원화를 이 경로로 보내지 마세요.
 
 ---

@@ -28,6 +28,8 @@ from final_check.common import FinalError, load_local_config, run_cli  # noqa: E
 def main() -> dict:
     ap = argparse.ArgumentParser()
     ap.add_argument("--where", default="demo")
+    ap.add_argument("--mail-declared-by", default="",
+                    help="합성 자료 결과를 메일로 받을 때: 비기밀 자료임을 확인한 사람 이름 (보고서 첨부 메일 ON)")
     args = ap.parse_args()
     from synthetic import LOGO, base_page, build_pdf, with_text
 
@@ -55,9 +57,18 @@ def main() -> dict:
         build_pdf(path, pages, shift=shift)
         os.utime(path, (old, old))
     cfg_path = base / "config.demo.json"
-    cfg_path.write_text(json.dumps({"privacy_mode": "LOCAL_ONLY", "root_dir": str(root), "output_dir": str(out),
-                                    "processing": {"page_isolation": "process"}}, ensure_ascii=False, indent=2),
-                        encoding="utf-8")
+    import secrets
+
+    demo_cfg = {"privacy_mode": "LOCAL_ONLY", "root_dir": str(root), "output_dir": str(out),
+                "file_rules": {"stable_seconds": 60},
+                "processing": {"page_isolation": "process"},
+                "local_api": {"host": "127.0.0.1", "port": 8765, "token": secrets.token_urlsafe(32)}}
+    if args.mail_declared_by:
+        demo_cfg["notification"] = {
+            "safe_email_enabled": True, "email_detail": "FULL_REPORT",
+            "approval_note": "합성(가상) 데모 자료 — 회사 원화 아님",
+            "non_confidential_declared_by": args.mail_declared_by}
+    cfg_path.write_text(json.dumps(demo_cfg, ensure_ascii=False, indent=2), encoding="utf-8")
     cfg = load_local_config(cfg_path)
     from final_check.local_runner import load_manifest, run_pair
     from pair_resolver import cmd_approve, cmd_scan

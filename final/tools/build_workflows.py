@@ -81,14 +81,17 @@ def local_workflow():
              cond_true("={{ $json.ok === true && $json.status === 'COMPARED' }}", "c-compared")),
         node("07 Safe notice approved?", "n8n-nodes-base.if", 2.2, [1320, 200],
              cond_true("={{ $json.safe_email_enabled === true && $('02 Settings').first().json.safe_notice_to !== '' }}", "c-safe")),
-        node("08 Send SAFE notice (OFF)", "n8n-nodes-base.gmail", 2.1, [1540, 100], {
+        node("07b Build mail + attachment", "n8n-nodes-base.code", 2, [1430, 100], {
+            "mode": "runOnceForEachItem", "jsCode": BUILD_MAIL_JS}),
+        node("08 Send result mail (OFF)", "n8n-nodes-base.gmail", 2.1, [1600, 100], {
             "resource": "message", "operation": "send",
             "sendTo": "={{ $('02 Settings').first().json.safe_notice_to }}",
-            "subject": "={{ $json.safe_notification.subject }}",
+            "subject": "={{ $json.mail_subject }}",
             "emailType": "html",
-            "message": "={{ $json.safe_notification.html }}",
-            "options": {"appendAttribution": False}}, disabled=True),
-        node("09 Gmail accepted?", "n8n-nodes-base.if", 2.2, [1760, 100],
+            "message": "={{ $json.mail_html }}",
+            "options": {"appendAttribution": False, "senderName": "FINAL? 원화 검수",
+                        "attachmentsUi": {"attachmentsBinary": [{"property": "report"}]}}}, disabled=True),
+        node("09 Gmail accepted?", "n8n-nodes-base.if", 2.2, [1780, 100],
              cond_true("={{ typeof $json.id === 'string' && $json.id.length > 0 && Array.isArray($json.labelIds) }}", "c-accepted")),
         http_local("10 Record: SENT", [1980, 0], "/delivery",
                    "={{ JSON.stringify({ run_key: $('05 Compare pair (local API)').item.json.run_key, status: 'SENT_ACCEPTED_BY_PROVIDER', message_id: $json.id }) }}",
@@ -105,8 +108,8 @@ def local_workflow():
                "상세 보고서는 PC의 output_dir에만 저장됩니다.\n자격증명: Header Auth `X-FINAL-Token` = config의 local_api.token\n"
                "03·05·10·11 노드에 같은 자격증명을 선택하세요.", 620, 250, 4),
         sticky("EXTERNAL SEND = OFF", [1480, -260],
-               "## 08 메일 발송은 기본 OFF\n메일 발송도 외부 전송입니다.\n켜려면 (1) 회사 승인 확인 (2) config.local.json `notification.safe_email_enabled=true` + `approval_note` "
-               "(3) 02 Settings `safe_notice_to` (4) 08 노드 Enable.\n보내는 내용은 문구·파일명 없는 **안전 요약**뿐입니다.\n"
+               "## 08 메일 발송은 기본 OFF\n메일 발송도 외부 전송입니다.\n켜려면 (1) 승인/비기밀 확인 (2) config.local.json `notification.safe_email_enabled=true` + `approval_note` "
+               "(3) 02 Settings `safe_notice_to` (4) 08 노드 Enable + Gmail 자격증명.\n기본 내용은 문구·파일명 없는 **안전 요약**. 비기밀 자료만 `email_detail=FULL_REPORT`로 보고서 첨부.\n"
                "로컬 저장만으로 '결과 전달' 과제 요건을 충족했다고 보지 않습니다.", 620, 250, 3),
         sticky("EVIDENCE", [640, 560],
                "## 자동 실행 증빙\nPublish/Activate 후 Schedule이 스스로 실행한 건만 '자동 실행'입니다.\n"
@@ -119,14 +122,28 @@ def local_workflow():
     connect(conns, "04 One item per pair", ["05 Compare pair (local API)"])
     connect(conns, "05 Compare pair (local API)", ["06 Compared?"])
     connect(conns, "06 Compared?", ["07 Safe notice approved?"], ["12 Not compared (codes only)"])
-    connect(conns, "07 Safe notice approved?", ["08 Send SAFE notice (OFF)"], ["11 Record: LOCAL ONLY (not sent)"])
-    connect(conns, "08 Send SAFE notice (OFF)", ["09 Gmail accepted?"])
+    connect(conns, "07 Safe notice approved?", ["07b Build mail + attachment"], ["11 Record: LOCAL ONLY (not sent)"])
+    connect(conns, "07b Build mail + attachment", ["08 Send result mail (OFF)"])
+    connect(conns, "08 Send result mail (OFF)", ["09 Gmail accepted?"])
     connect(conns, "09 Gmail accepted?", ["10 Record: SENT"], ["11 Record: LOCAL ONLY (not sent)"])
     return {"name": "FINAL? LOCAL_ONLY — 로컬 원화 자동 비교", "nodes": nodes, "connections": conns, "active": False,
             "settings": {"executionOrder": "v1", "timezone": "Asia/Seoul", "saveDataSuccessExecution": "all",
                          "saveDataErrorExecution": "all", "saveManualExecutions": True},
             "pinData": {}, "meta": {"templateCredsSetupCompleted": False}, "tags": []}
 
+
+BUILD_MAIL_JS = r"""// Mail body = safe summary. A full report is attached only when the local API
+// returned one (config email_detail=FULL_REPORT + non-confidential declaration).
+const j = $json;
+const n = j.safe_notification || {};
+const full = j.email_detail === 'FULL_REPORT' && j.report_html_b64;
+const note = full ? '<p>첨부: 상세 보고서(HTML). 브라우저로 여세요. 최종 승인이 아닙니다.</p>'
+                  : '<p>상세 보고서는 PC의 결과 폴더에만 있습니다. 최종 승인이 아닙니다.</p>';
+const fallback = Buffer.from('<!doctype html><meta charset="utf-8">' + (n.html || '')).toString('base64');
+return { json: { ...j, report_html_b64: undefined, mail_subject: n.subject, mail_html: (n.html || '') + note },
+  binary: { report: { data: full ? j.report_html_b64 : fallback, mimeType: 'text/html',
+    fileName: `FINAL_${j.pair_id}_${j.run_key}.html` } } };
+"""
 
 VALIDATE_JS = r"""// APPROVED_EXTERNAL_B only. Refuses to run until the approval gate is filled.
 const s = $('02 Settings').first().json;

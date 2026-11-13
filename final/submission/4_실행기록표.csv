@@ -1,0 +1,2 @@
+﻿no,run_datetime_kst,n8n_execution_id,auto_or_manual,trigger,mode,data_kind,category_code,pair_id,run_key,overall_status,text_changes,numeric_changes,visual_candidates,unprocessed_entries,requests_provided,request_summary,delivery_channel,delivery_response_id,receipt_confirmed,human_review_result,llm_called,llm_tokens,manual_minutes_before,review_minutes_after,notes
+1,,,AUTO/MANUAL,SCHEDULE/GMAIL,LOCAL_ONLY/APPROVED_EXTERNAL_B,REAL/SYNTHETIC/RECREATED,SET/SINGLE,,,,,,,,Y/N,,LOCAL/SAFE_MAIL/B_MAIL,,Y/N,,N,NOT_CALLED,,,

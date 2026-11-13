@@ -807,3 +807,34 @@ class ApprovedExternalB(unittest.TestCase):
         html_text = base64.b64decode(res["report_html_b64"]).decode()
         self.assertIn("내용량␣60ml", html_text)
         self.assertIn("data:image/png;base64,", html_text)
+
+
+class FullReportMail(Base):
+    def test_full_report_requires_declaration_and_returns_attachment(self):
+        import base64
+
+        base = {"privacy_mode": "LOCAL_ONLY", "root_dir": str(self.root), "output_dir": str(self.out)}
+        for note, code in (({"email_detail": "FULL_REPORT"}, "FULL_REPORT_EMAIL_REQUIRES_SAFE_EMAIL_ENABLED"),
+                           ({"email_detail": "FULL_REPORT", "safe_email_enabled": True, "approval_note": "synthetic test"},
+                            "FULL_REPORT_EMAIL_REQUIRES_NON_CONFIDENTIAL_DECLARATION"),
+                           ({"email_detail": "EVERYTHING"}, "EMAIL_DETAIL_MUST_BE_SAFE_SUMMARY_OR_FULL_REPORT")):
+            with self.subTest(code=code):
+                with self.assertRaises(FinalError) as cm:
+                    validate_local_config({**base, "notification": note})
+                self.assertEqual(cm.exception.code, code)
+        b = base_page()
+        cfg, pid = self.one_pair([b], [with_text(b, "내용량 50ml", "내용량 60ml")], cfg={"notification": {
+            "safe_email_enabled": True, "approval_note": "synthetic test", "email_detail": "FULL_REPORT",
+            "non_confidential_declared_by": "tester"}})
+        res = run_pair(cfg, pid)
+        self.assertEqual(res["email_detail"], "FULL_REPORT")
+        html_text = base64.b64decode(res["report_html_b64"]).decode()
+        self.assertIn("내용량␣60ml", html_text)
+        self.assertIn("data:image/png;base64,", html_text)
+
+    def test_default_has_no_report_attachment(self):
+        b = base_page()
+        cfg, pid = self.one_pair([b], [with_text(b, "내용량 50ml", "내용량 60ml")])
+        res = run_pair(cfg, pid)
+        self.assertNotIn("report_html_b64", res)
+        self.assertEqual(res["email_detail"], "SAFE_SUMMARY")
