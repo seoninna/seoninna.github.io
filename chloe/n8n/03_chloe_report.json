@@ -2,22 +2,22 @@
   "name": "Chloe 03 - 성과 분석·예산 조정",
   "nodes": [
     {
-      "id": "213ad968-e4cc-4bfc-ad54-a0deb5a6556d",
+      "id": "e918df27-c5b1-5f25-a1a7-a1c2c2086a48",
       "name": "설명",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
         -60,
-        -260
+        -300
       ],
       "parameters": {
         "width": 1240,
-        "height": 200,
+        "height": 240,
         "content": "## Chloe 03 · 성과 분석\n프론트 → **Webhook** → 지표 계산(CTR·CVR·CPC·CPA·ROAS를 코드로 정확히 계산) → **AI Agent 클로이**(진단·개선 가설·예산 조정안) → 결과 검증(±20% 규칙 밖이면 '대표 승인 필요') → 응답"
       }
     },
     {
-      "id": "8f5d7029-c04f-4793-883d-fa226a6c90df",
+      "id": "52751cd5-84c3-5b00-a62d-162e48b9cf03",
       "name": "Webhook (프론트 요청 받기)",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
@@ -25,7 +25,6 @@
         0,
         0
       ],
-      "webhookId": "c5f110cc-6d39-48b9-88ae-9de08b3317b0",
       "parameters": {
         "httpMethod": "POST",
         "path": "chloe-report",
@@ -33,10 +32,11 @@
         "options": {
           "allowedOrigins": "*"
         }
-      }
+      },
+      "webhookId": "575b3752-a532-5295-9efe-c372c9342977"
     },
     {
-      "id": "6af73932-e4fb-43ae-a69d-0e96c9448f89",
+      "id": "f1dc53f2-9bcc-57ef-820a-a8f922fe5a61",
       "name": "지표 계산",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -49,12 +49,12 @@
       }
     },
     {
-      "id": "c088c022-0a45-4fe6-8ef4-dbe88cd65a41",
+      "id": "ea83bc48-c356-5226-a34d-d5bc0a992014",
       "name": "AI Agent 클로이",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 1.7,
       "position": [
-        500,
+        480,
         0
       ],
       "parameters": {
@@ -67,12 +67,40 @@
       }
     },
     {
-      "id": "711efa85-db56-4491-abf3-2d8eaae0e025",
+      "id": "9ac4a2e4-318e-538e-b469-0995561265fe",
+      "name": "결과 검증",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// AI 응답에서 JSON만 안전하게 꺼내기\nfunction parseJson(t) {\n  t = String(t || '').replace(/```json/gi, '').replace(/```/g, '');\n  const s = t.indexOf('{'), e = t.lastIndexOf('}');\n  if (s < 0 || e < 0) throw new Error('JSON not found');\n  return JSON.parse(t.slice(s, e + 1));\n}\n\nconst out = $input.first().json.output;\nconst prep = $('지표 계산').first().json;\nlet data, checks = [];\ntry { data = parseJson(out); } catch (e) { data = { raw: String(out || '') }; checks.push({ ok: false, label: 'AI 응답 JSON 변환 실패 → 원문 표시' }); }\n\n// 운영 규칙 검사: 변경 폭 ±20%, 합계 ≤ 총예산, 데이터 부족 채널 증액 금지 → 위반 시 '대표 승인 필요'\nconst LIMIT = 20;\nconst chMap = Object.fromEntries(prep.metrics.channels.map(c => [c.name, c]));\nlet sum = 0;\n(data.budget_adjustments || []).forEach(a => {\n  const cur = Number(a.current || (chMap[a.channel] ? chMap[a.channel].spend : 0));\n  const pro = Number(a.proposed || 0);\n  a.current = cur; a.proposed = pro; sum += pro;\n  a.change_pct = cur > 0 ? Math.round((pro - cur) / cur * 1000) / 10 : null;\n  const reasons = [];\n  if (a.change_pct !== null && Math.abs(a.change_pct) > LIMIT) reasons.push(`변경 폭 ${a.change_pct}% (규칙 ±${LIMIT}%)`);\n  if (chMap[a.channel] && !chMap[a.channel].enough_data && pro > cur) reasons.push('데이터 부족 채널 증액');\n  a.needs_approval = reasons.length > 0;\n  a.approval_reason = reasons.join(', ');\n});\nif (sum > prep.request.total_budget) checks.push({ ok: false, label: `조정안 합계 ${sum.toLocaleString()}원 > 총예산 ${prep.request.total_budget.toLocaleString()}원 → 대표 승인 필요` });\nelse if (sum > 0) checks.push({ ok: true, label: `조정안 합계 ${sum.toLocaleString()}원 ≤ 총예산` });\nconst need = (data.budget_adjustments || []).filter(a => a.needs_approval).length;\nchecks.push(need ? { ok: false, label: `규칙 밖 조정 ${need}건 → 대표 승인 후 실행` } : { ok: true, label: '모든 조정이 자동 실행 범위(±20%) 안' });\nchecks.push({ ok: true, label: '지표는 코드로 계산 (AI 계산 아님)' });\n\nreturn [{ json: { ok: true, type: 'report', generated_at: new Date().toISOString(), elapsed_ms: Date.now() - prep.startedAt, checks, metrics: prep.metrics, data } }];\n"
+      }
+    },
+    {
+      "id": "82079cbe-c088-5f8d-a2d8-a3b45b08511a",
+      "name": "Respond to Webhook (결과 보내기)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        960,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "38675a62-1248-537a-afd2-eaef2d0c58e7",
       "name": "OpenAI Chat Model",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
       "position": [
-        420,
+        400,
         240
       ],
       "parameters": {
@@ -84,48 +112,20 @@
         },
         "options": {
           "temperature": 0.4,
-          "maxTokens": 4000
+          "maxTokens": 6000
         }
       }
     },
     {
-      "id": "8a5eebda-268c-4934-8add-45dd376006fb",
+      "id": "8951c68c-5b22-5ade-93ab-4956a0e2b6a7",
       "name": "Calculator",
       "type": "@n8n/n8n-nodes-langchain.toolCalculator",
       "typeVersion": 1,
       "position": [
-        640,
+        620,
         240
       ],
       "parameters": {}
-    },
-    {
-      "id": "b73b375a-e655-49a1-863b-85150fe9f4bc",
-      "name": "결과 검증",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        860,
-        0
-      ],
-      "parameters": {
-        "jsCode": "// AI 응답에서 JSON만 안전하게 꺼내기\nfunction parseJson(t) {\n  t = String(t || '').replace(/```json/gi, '').replace(/```/g, '');\n  const s = t.indexOf('{'), e = t.lastIndexOf('}');\n  if (s < 0 || e < 0) throw new Error('JSON not found');\n  return JSON.parse(t.slice(s, e + 1));\n}\n\nconst out = $input.first().json.output;\nconst prep = $('지표 계산').first().json;\nlet data, checks = [];\ntry { data = parseJson(out); } catch (e) { data = { raw: String(out || '') }; checks.push({ ok: false, label: 'AI 응답 JSON 변환 실패 → 원문 표시' }); }\n\n// 운영 규칙 검사: 변경 폭 ±20%, 합계 ≤ 총예산, 데이터 부족 채널 증액 금지 → 위반 시 '대표 승인 필요'\nconst LIMIT = 20;\nconst chMap = Object.fromEntries(prep.metrics.channels.map(c => [c.name, c]));\nlet sum = 0;\n(data.budget_adjustments || []).forEach(a => {\n  const cur = Number(a.current || (chMap[a.channel] ? chMap[a.channel].spend : 0));\n  const pro = Number(a.proposed || 0);\n  a.current = cur; a.proposed = pro; sum += pro;\n  a.change_pct = cur > 0 ? Math.round((pro - cur) / cur * 1000) / 10 : null;\n  const reasons = [];\n  if (a.change_pct !== null && Math.abs(a.change_pct) > LIMIT) reasons.push(`변경 폭 ${a.change_pct}% (규칙 ±${LIMIT}%)`);\n  if (chMap[a.channel] && !chMap[a.channel].enough_data && pro > cur) reasons.push('데이터 부족 채널 증액');\n  a.needs_approval = reasons.length > 0;\n  a.approval_reason = reasons.join(', ');\n});\nif (sum > prep.request.total_budget) checks.push({ ok: false, label: `조정안 합계 ${sum.toLocaleString()}원 > 총예산 ${prep.request.total_budget.toLocaleString()}원 → 대표 승인 필요` });\nelse if (sum > 0) checks.push({ ok: true, label: `조정안 합계 ${sum.toLocaleString()}원 ≤ 총예산` });\nconst need = (data.budget_adjustments || []).filter(a => a.needs_approval).length;\nchecks.push(need ? { ok: false, label: `규칙 밖 조정 ${need}건 → 대표 승인 후 실행` } : { ok: true, label: '모든 조정이 자동 실행 범위(±20%) 안' });\nchecks.push({ ok: true, label: '지표는 코드로 계산 (AI 계산 아님)' });\n\nreturn [{ json: { ok: true, type: 'report', generated_at: new Date().toISOString(), elapsed_ms: Date.now() - prep.startedAt, checks, metrics: prep.metrics, data } }];\n"
-      }
-    },
-    {
-      "id": "64fc8a9c-48c8-45db-97b9-218b3fd73173",
-      "name": "Respond to Webhook (결과 보내기)",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.1,
-      "position": [
-        1080,
-        0
-      ],
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ JSON.stringify($json) }}",
-        "options": {}
-      }
     }
   ],
   "connections": {
