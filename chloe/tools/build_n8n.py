@@ -422,6 +422,11 @@ CRE_PREP = r"""// ⚙ 설정 ─────────────────
 const CONFIG = {
   IMAGE_MODEL: 'gpt-image-1',   // 더 저렴: 'gpt-image-1-mini' / 조직 인증이 어려우면: 'dall-e-3'
   IMAGE_QUALITY: 'low',         // low(빠르고 저렴) · medium · high  (프론트에서 보내면 그 값 사용)
+  // 이미지 생성 방식: 'auto' = OpenAI 먼저, 실패한 이미지는 무료 서비스로 대체
+  //                  'openai' = OpenAI만 / 'free' = 무료 서비스만 (OpenAI 이미지 권한이 없을 때)
+  IMAGE_PROVIDER: 'auto',
+  // 무료 이미지 서비스 주소 ({prompt} {width} {height} {seed} 자리에 값이 들어감)
+  FREE_IMAGE_URL: 'https://image.pollinations.ai/prompt/{prompt}?width={width}&height={height}&seed={seed}&nologo=true&model=flux',
 };
 // ─────────────────────────────────────────────────────────────
 """ + READ_BODY + CRE_FORMATS_JS + r"""
@@ -503,36 +508,49 @@ if (req.make_image) data.creatives.forEach(c => {
   const image_request = dalle
     ? { model: m, prompt: promptEn, n: 1, size, response_format: 'b64_json' }
     : { model: m, prompt: promptEn, n: 1, size, quality: req.quality, output_format: 'jpeg', output_compression: 80 };
-  items.push({ json: { format: c.format, mime: dalle ? 'image/png' : 'image/jpeg', image_request } });
+  const [fw, fh] = ({ '1024x1024': [1024, 1024], '1024x1536': [864, 1536], '1536x1024': [1536, 640] })[f.size] || [1024, 1024];
+  const free_url = CONFIG.FREE_IMAGE_URL.replace('{prompt}', encodeURIComponent(promptEn.slice(0, 900)))
+    .replace('{width}', fw).replace('{height}', fh).replace('{seed}', Math.floor(Math.random() * 1e6));
+  items.push({ json: { format: c.format, mime: dalle ? 'image/png' : 'image/jpeg', image_request,
+    use_openai: CONFIG.IMAGE_PROVIDER !== 'free', use_free: CONFIG.IMAGE_PROVIDER !== 'openai', free_url } });
 });
 // 이미지가 없어도 다음 노드가 실행되도록 빈 항목 1개 (요청은 실패 처리되고 무시됨)
-if (!items.length) items.push({ json: { skip: true, image_request: {} } });
+if (!items.length) items.push({ json: { skip: true, use_openai: false, use_free: false, image_request: {} } });
 items[0].json.result = data; items[0].json.checks = checks;
 return items;
 """
 
 CRE_MERGE = r"""// 이미지 생성 결과를 소재에 붙이기 (요청 순서 = 응답 순서)
 const reqItems = $('소재 검증 · 이미지 요청 준비').all();
-const res = $input.all();
+const res = $('이미지 생성 (OpenAI)').all();   // OpenAI 결과
+const free = $input.all();                      // 무료 서비스 결과 (바이너리)
 const prep = $('요청 정리 · 설정').first().json;
 const first = reqItems[0].json;
 const data = first.result, checks = first.checks || [];
-const images = {}, errors = [];
-reqItems.forEach((it, i) => {
+const images = {}, errors = [], via = {};
+for (let i = 0; i < reqItems.length; i++) { const it = reqItems[i]; await (async () => {
   if (it.json.skip) return;
   const r = (res[i] && res[i].json) || {};
   const d = Array.isArray(r.data) ? r.data[0] : null;
-  if (d && d.b64_json) images[it.json.format] = `data:${it.json.mime};base64,${d.b64_json}`;
-  else {
+  if (d && d.b64_json) { images[it.json.format] = `data:${it.json.mime};base64,${d.b64_json}`; return; }
+  // OpenAI 실패/미사용 → 무료 서비스 이미지 확인
+  const fi = free[i];
+  if (it.json.use_free && fi && fi.binary && fi.binary.data) {
+    let b64 = null;
+    try { b64 = (await this.helpers.getBinaryDataBuffer(i, 'data')).toString('base64'); } catch (e) { b64 = fi.binary.data.data || null; }
+    if (b64 && b64.length > 1000) { images[it.json.format] = `data:${fi.binary.data.mimeType || 'image/jpeg'};base64,${b64}`; via[it.json.format] = 'free'; return; }
+  }
+  {
     let msg = r.error ? (r.error.message || r.error.description || JSON.stringify(r.error)) : '이미지 없음';
     msg = String(msg).slice(0, 240);
     if (/verif/i.test(msg)) msg += ' → OpenAI 조직 인증이 필요해요. 설정에서 IMAGE_MODEL을 dall-e-3로 바꾸거나 인증을 진행하세요.';
+    if (it.json.use_free) msg += ' / 무료 이미지 서비스도 실패';
     errors.push(`${it.json.format}: ${msg}`);
   }
-});
-(data.creatives || []).forEach(c => { c.image = images[c.format] || null; });
+})(); }
+(data.creatives || []).forEach(c => { c.image = images[c.format] || null; c.image_source = images[c.format] ? (via[c.format] === 'free' ? 'free' : 'openai') : null; });
 const want = reqItems.filter(it => !it.json.skip).length;
-if (want) checks.push(errors.length ? { ok: false, label: `이미지 ${want - errors.length}/${want}장 생성 (실패분은 기본 배경 사용)` } : { ok: true, label: `AI 이미지 ${want}장 생성 완료 (${prep.config.IMAGE_MODEL})` });
+if (want) checks.push(errors.length ? { ok: false, label: `이미지 ${want - errors.length}/${want}장 생성 (실패분은 기본 배경 사용)` } : { ok: true, label: `AI 이미지 ${want}장 생성 완료 (OpenAI ${want - Object.keys(via).length}장 · 무료 서비스 ${Object.keys(via).length}장)` });
 return [{ json: { ok: true, type: 'creative', generated_at: new Date().toISOString(), elapsed_ms: Date.now() - prep.startedAt, checks, image_errors: errors, data } }];
 """
 
@@ -629,12 +647,14 @@ FLOWS = [
              ("요청 정리 · 설정", code(CRE_PREP)),
              (AG, agent(CRE_SYSTEM)),
              ("소재 검증 · 이미지 요청 준비", code(CRE_VERIFY)),
-             ("이미지 생성 (OpenAI)", http({"method": "POST", "url": "https://api.openai.com/v1/images/generations",
+             ("이미지 생성 (OpenAI)", http({"method": "POST", "url": "={{ $json.use_openai ? 'https://api.openai.com/v1/images/generations' : 'https://example.invalid/skip-openai' }}",
                                            "authentication": "predefinedCredentialType", "nodeCredentialType": "openAiApi",
                                            "sendBody": True, "specifyBody": "json", "jsonBody": "={{ JSON.stringify($json.image_request) }}",
                                            "options": {"timeout": 180000}}, CONT)),
+             ("무료 이미지 생성 (예비)", http({"url": "={{ (() => { const r = $('소재 검증 · 이미지 요청 준비').all()[$itemIndex].json; const ok = $json.data && $json.data[0] && $json.data[0].b64_json; return (r.use_free && !ok) ? r.free_url : 'https://example.invalid/skip-free'; })() }}",
+                                       "options": {"timeout": 120000, "response": {"response": {"responseFormat": "file", "outputPropertyName": "data"}}}}, CONT)),
              ("결과 합치기", code(CRE_MERGE))],
-         note="## Chloe 04 · 광고 소재 스튜디오\n프론트(대표 프롬프트) → **Webhook** → 요청 정리·설정 → **AI Agent 클로이**(컨셉·매체별 카피 3안·이미지 프롬프트) → 소재 검증(글자 수·금지 표현) → **이미지 생성 (OpenAI)** 매체당 1장 → 결과 합치기 → 응답\n\n⚠ 처음 한 번: `OpenAI Chat Model`과 `이미지 생성 (OpenAI)` 두 노드 모두 OpenAI Credential 선택.\n이미지 모델 변경: `요청 정리 · 설정` 노드 맨 위 CONFIG"),
+         note="## Chloe 04 · 광고 소재 스튜디오\n프론트(대표 프롬프트) → **Webhook** → 요청 정리·설정 → **AI Agent 클로이**(컨셉·매체별 카피 3안·이미지 프롬프트) → 소재 검증(글자 수·금지 표현) → **이미지 생성 (OpenAI)** 매체당 1장 → 실패분은 **무료 이미지 생성 (예비)** → 결과 합치기 → 응답\n\n⚠ 처음 한 번: `OpenAI Chat Model`과 `이미지 생성 (OpenAI)` 두 노드 모두 OpenAI Credential 선택.\n이미지 방식(auto/openai/free)·모델 변경: `요청 정리 · 설정` 노드 맨 위 CONFIG. OpenAI 이미지 권한이 없으면 IMAGE_PROVIDER를 'free'로 두면 빠릅니다."),
 ]
 
 for f in FLOWS:

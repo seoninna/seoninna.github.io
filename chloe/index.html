@@ -5,171 +5,263 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>클로이 · AI 마케팅 파트너</title>
 <meta name="description" content="소규모 브랜드 대표를 위한 AI 마케팅 에이전트 클로이(Chloe) MVP — 인공지능 비즈니스전략 3조">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="icon" href="assets/chloe-face.jpg">
 <style>
 :root{
-  --bg:#f6f5fb; --card:#fff; --ink:#1d1b2e; --sub:#6b6880; --line:#e7e4f0;
-  --pri:#5b4fe0; --pri-soft:#eeecfd; --pri-ink:#3e33b8;
-  --coral:#ff6f61; --coral-soft:#fff0ee;
-  --good:#14a26a; --good-soft:#e6f7ef; --warn:#d98a00; --warn-soft:#fff6e2; --bad:#e0475a; --bad-soft:#fdecee;
-  --r:16px; --shadow:0 1px 2px rgba(30,20,80,.04),0 6px 24px rgba(30,20,80,.06);
+  --bg:#ffffff; --bg-soft:#f7f6fd; --card:#fff; --ink:#15123b; --sub:#5d5a78; --line:#e7e5f1;
+  --pri:#4b3fd6; --pri-ink:#382dac; --pri-soft:#efedff; --pri-2:#7b6ff0;
+  --navy:#1a1646; --navy-2:#241f5c;
+  --coral:#e8624f; --coral-soft:#fdeeeb;
+  --good:#12996a; --good-soft:#e5f6ef; --warn:#c27c00; --warn-soft:#fff5e0; --bad:#d63e54; --bad-soft:#fdecef;
+  --r:12px; --shadow:0 1px 2px rgba(21,18,59,.04),0 10px 30px rgba(21,18,59,.06);
+  --font:"Plus Jakarta Sans",Pretendard,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
 }
 *{box-sizing:border-box}
 html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font-family:Pretendard,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;word-break:keep-all}
 button,input,select,textarea{font:inherit;color:inherit}
-a{color:var(--pri)}
-.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
-/* top */
-header.top{position:sticky;top:0;z-index:20;background:rgba(246,245,251,.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-.top .wrap{display:flex;align-items:center;gap:14px;height:62px}
-.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;letter-spacing:-.3px;cursor:pointer}
-.logo .mark{width:34px;height:34px;border-radius:11px;background:linear-gradient(135deg,var(--pri),var(--coral));display:grid;place-items:center;color:#fff;font-size:17px}
-.logo small{font-weight:500;color:var(--sub);font-size:13px}
-.spacer{flex:1}
-.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;font-size:12.5px;font-weight:600;border:1px solid var(--line);background:#fff;cursor:pointer;white-space:nowrap}
-.pill .dot{width:8px;height:8px;border-radius:50%}
-.pill.demo .dot{background:var(--warn)} .pill.live .dot{background:var(--good)}
-nav.tabs{display:flex;gap:4px;overflow-x:auto;padding:10px 0 0;scrollbar-width:none}
+a{color:var(--pri);text-decoration:none}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+svg.ic{width:1.1em;height:1.1em;vertical-align:-.17em;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+/* ---------- top bar & nav ---------- */
+.topbar{background:var(--pri);color:#fff;font-size:12.5px;letter-spacing:.2px}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;height:38px}
+.topbar b{background:rgba(255,255,255,.18);padding:2px 7px;border-radius:4px;margin-right:6px;font-size:11px;letter-spacing:.6px}
+.topbar a{color:#fff;font-weight:700;display:inline-flex;gap:6px;align-items:center;white-space:nowrap;cursor:pointer}
+header.top{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.nav{display:flex;align-items:center;gap:20px;min-height:68px}
+.logo{display:flex;align-items:center;gap:10px;cursor:pointer;color:var(--ink);flex:none}
+.logo svg{width:34px;height:34px}
+.logo .lt{display:flex;flex-direction:column;line-height:1.05}
+.logo .lt b{font-size:18px;letter-spacing:2.5px;font-weight:800}
+.logo .lt small{font-size:9.5px;letter-spacing:2.6px;color:var(--sub);font-weight:600}
+nav.tabs{display:flex;gap:2px;flex:1;justify-content:center;overflow-x:auto;scrollbar-width:none}
 nav.tabs::-webkit-scrollbar{display:none}
-nav.tabs button{border:0;background:none;padding:9px 14px;border-radius:10px 10px 0 0;font-weight:600;color:var(--sub);cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent}
-nav.tabs button.on{color:var(--pri-ink);border-bottom-color:var(--pri)}
-nav.tabs button:hover{color:var(--ink)}
-main{padding:26px 0 80px}
+nav.tabs button{border:0;background:none;padding:10px 12px;font-weight:600;font-size:14px;color:var(--ink);cursor:pointer;white-space:nowrap;position:relative;border-radius:8px}
+nav.tabs button:hover{color:var(--pri)}
+nav.tabs button.on{color:var(--pri)}
+nav.tabs button.on::after{content:"";position:absolute;left:12px;right:12px;bottom:2px;height:2px;border-radius:2px;background:var(--pri)}
+.nav-right{display:flex;align-items:center;gap:10px;flex:none}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid var(--line);background:#fff;cursor:pointer;white-space:nowrap}
+.pill .dot{width:7px;height:7px;border-radius:50%}
+.pill.demo .dot{background:var(--warn)} .pill.live .dot{background:var(--good);box-shadow:0 0 0 3px var(--good-soft)}
+@media(max-width:1020px){.nav{flex-wrap:wrap;gap:10px;padding-top:10px}nav.tabs{order:3;flex-basis:100%;justify-content:flex-start;margin:0 -12px}.nav-right{margin-left:auto}.nav-right .btn{display:none}}
+@media(max-width:600px){.topbar span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.wrap{padding:0 16px}}
+/* ---------- layout ---------- */
+main{padding:0 0 80px}
 section.page{display:none} section.page.on{display:block}
-h1{font-size:30px;line-height:1.25;letter-spacing:-.6px;margin:0 0 8px}
-h2{font-size:20px;letter-spacing:-.3px;margin:0 0 4px}
-h3{font-size:16px;margin:0 0 10px}
-.lead{color:var(--sub);margin:0 0 20px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px;box-shadow:var(--shadow)}
+section.page:not(#p-home){max-width:1180px;margin:0 auto;padding:36px 24px 0}
+@media(max-width:600px){section.page:not(#p-home){padding:24px 16px 0}}
+.page-head{margin-bottom:24px}
+.eyebrow{font-size:12px;font-weight:800;letter-spacing:1.6px;color:var(--pri);text-transform:uppercase;margin-bottom:8px}
+h1{font-size:34px;line-height:1.2;letter-spacing:-.8px;margin:0 0 8px;font-weight:800}
+h2{font-size:22px;letter-spacing:-.4px;margin:0 0 4px;font-weight:800}
+h3{font-size:16px;margin:0 0 12px;font-weight:800;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+h3 svg.ic{color:var(--pri)}
+.lead{color:var(--sub);margin:0;font-size:16px}
+.hl{color:var(--pri)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:24px;box-shadow:var(--shadow)}
 .grid{display:grid;gap:16px}
 .g2{grid-template-columns:repeat(2,minmax(0,1fr))} .g3{grid-template-columns:repeat(3,minmax(0,1fr))} .g4{grid-template-columns:repeat(4,minmax(0,1fr))}
 .split{display:grid;grid-template-columns:380px minmax(0,1fr);gap:20px;align-items:start}
 .split>*,.grid>*,.row2>*{min-width:0}
 @media(max-width:960px){.split{grid-template-columns:minmax(0,1fr)}.g3,.g4{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:600px){.g2,.g3,.g4{grid-template-columns:1fr}.wrap{padding:0 16px}h1{font-size:24px}.logo small{display:none}.card{padding:18px}}
-/* hero */
-.hero{background:linear-gradient(135deg,#2a2170 0%,#5b4fe0 55%,#ff8a7a 130%);color:#fff;border-radius:22px;padding:34px;position:relative;overflow:hidden}
-.hero p{color:rgba(255,255,255,.85);margin:0 0 20px;max-width:620px}
-.hero .tag{display:inline-block;background:rgba(255,255,255,.16);padding:4px 10px;border-radius:999px;font-size:12.5px;margin-bottom:12px}
-.hero .actions{display:flex;gap:10px;flex-wrap:wrap}
-.hero .btn.ghost{background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.3)}
-.stat{padding:18px}
-.stat .k{color:var(--sub);font-size:13px}
-.stat .v{font-size:26px;font-weight:800;letter-spacing:-.5px}
-.stat .s{font-size:12.5px;color:var(--sub)}
+@media(max-width:600px){.g2,.g3,.g4{grid-template-columns:1fr}h1{font-size:27px}.card{padding:18px}}
+/* ---------- home ---------- */
+.hero{background:linear-gradient(180deg,#fff 0%,var(--bg-soft) 100%);padding:64px 0 56px;overflow:hidden}
+.hero .wrap{display:grid;grid-template-columns:1.02fr .98fr;gap:48px;align-items:center}
+.hero h1{font-size:52px;letter-spacing:-1.8px;line-height:1.12;margin:6px 0 18px}
+.hero p.sub{font-size:17px;color:var(--sub);max-width:520px;margin:0 0 28px}
+.hero .actions{display:flex;gap:12px;flex-wrap:wrap}
+.feat4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:36px}
+.feat4 div{display:flex;gap:9px;align-items:flex-start;font-size:12.5px;color:var(--sub);line-height:1.4}
+.feat4 svg.ic{color:var(--pri);font-size:20px;margin-top:1px}
+.feat4 b{display:block;color:var(--ink);font-size:13px}
+.visual{position:relative;padding:18px}
+.visual::before{content:"";position:absolute;inset:6% -8% -4% 12%;background:radial-gradient(closest-side,#e2ddff,rgba(226,221,255,0));z-index:0}
+.visual .frame{position:relative;z-index:1;border-radius:20px;overflow:hidden;box-shadow:0 30px 60px rgba(40,30,120,.18);border:6px solid #fff}
+.visual .frame img{display:block;width:100%;height:auto}
+.float{position:absolute;z-index:2;background:#fff;border-radius:14px;box-shadow:0 14px 34px rgba(21,18,59,.14);padding:12px 14px;min-width:150px}
+.float .k{font-size:11px;color:var(--sub);font-weight:700}
+.float .v{font-size:22px;font-weight:800;letter-spacing:-.5px}
+.float .up{color:var(--good);font-size:11px;font-weight:800}
+.f1{top:-4px;left:-14px} .f2{top:26%;right:-18px} .f3{bottom:-2px;left:8%;display:flex;gap:10px;align-items:center}
+.f3 img{width:40px;height:40px;border-radius:50%;object-fit:cover}
+.f3 .on{display:inline-block;width:8px;height:8px;background:var(--good);border-radius:50%;margin-right:4px}
+.minibars{display:flex;gap:4px;align-items:flex-end;height:30px;margin-top:6px}
+.minibars i{display:block;width:8px;border-radius:3px;background:linear-gradient(var(--pri-2),var(--pri))}
+@media(max-width:960px){.hero .wrap{grid-template-columns:1fr}.hero h1{font-size:40px}.visual{max-width:620px}}
+@media(max-width:600px){.hero{padding:36px 0}.hero h1{font-size:32px;letter-spacing:-1px}.feat4{grid-template-columns:repeat(2,minmax(0,1fr))}.float{transform:scale(.82)}.f1{left:-10px}.f2{right:-10px}}
+.trust{border-bottom:1px solid var(--line)}
+.trust .wrap{display:flex;align-items:center;gap:28px;padding:22px 24px;flex-wrap:wrap}
+.trust small{font-size:11px;font-weight:800;letter-spacing:1.4px;color:var(--sub)}
+.trust span{font-weight:800;color:#8c89a6;font-size:15px;letter-spacing:-.2px;display:inline-flex;align-items:center;gap:6px}
+.trust span i{width:8px;height:8px;border-radius:2px;background:#c9c5e4;display:inline-block}
+.sec{padding:64px 0}
+.sec-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:28px;flex-wrap:wrap}
+.sec-head h2{font-size:30px;letter-spacing:-.8px}
+.more{font-size:12.5px;font-weight:800;letter-spacing:.6px;display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+.svc{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:14px}
+.svc div{border:1px solid var(--line);border-radius:12px;padding:22px 16px;text-align:center;cursor:pointer;transition:.18s;background:#fff}
+.svc div:hover{border-color:var(--pri);box-shadow:var(--shadow);transform:translateY(-3px)}
+.svc svg.ic{font-size:34px;color:var(--pri);stroke-width:1.4;margin-bottom:10px}
+.svc b{display:block;font-size:14px;margin-bottom:6px}
+.svc span{font-size:12.5px;color:var(--sub);line-height:1.45;display:block}
+@media(max-width:960px){.svc{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:600px){.svc{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.band{background:linear-gradient(120deg,var(--navy) 0%,var(--navy-2) 70%,#3a2f99 130%);color:#fff;padding:54px 0}
+.band .wrap{display:grid;grid-template-columns:.9fr 1.6fr;gap:40px;align-items:center}
+.band .eyebrow{color:#b9b1ff}
+.band h2{font-size:30px;color:#fff;letter-spacing:-.8px}
+.band p{color:rgba(255,255,255,.75);margin:6px 0 20px}
+.band .btn{background:transparent;color:#fff;border-color:rgba(255,255,255,.45)}
+.band .btn:hover{background:rgba(255,255,255,.08);border-color:#fff}
+.bstats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+.bstats div{text-align:center;padding:6px 10px;border-left:1px solid rgba(255,255,255,.15)}
+.bstats div:first-child{border-left:0}
+.bstats svg.ic{font-size:30px;color:#cfc9ff;stroke-width:1.4}
+.bstats .v{font-size:32px;font-weight:800;letter-spacing:-1px;margin:6px 0 2px}
+.bstats .k{font-size:13px;color:rgba(255,255,255,.8);font-weight:600}
+.bstats .s{font-size:11.5px;color:rgba(255,255,255,.55)}
+@media(max-width:960px){.band .wrap{grid-template-columns:1fr}}
+@media(max-width:600px){.bstats{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:20px}.bstats div:nth-child(3){border-left:0}}
+.quote{border-bottom:1px solid var(--line)}
+.quote .wrap{display:flex;align-items:center;gap:24px;padding:30px 24px;flex-wrap:wrap}
+.quote .q{font-size:46px;color:#cdc7f7;font-weight:800;line-height:1}
+.quote p{flex:1;min-width:240px;margin:0;font-size:17px;font-weight:600}
+.quote .who2{display:flex;align-items:center;gap:12px}
+.quote .who2 img{width:56px;height:56px;border-radius:50%;object-fit:cover;border:3px solid var(--pri-soft)}
+.quote .who2 b{display:block} .quote .who2 span{font-size:12.5px;color:var(--sub)}
 /* journey */
-.journey{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
-@media(max-width:800px){.journey{grid-template-columns:1fr}}
-.jstep{border:1px solid var(--line);border-radius:14px;padding:14px;background:#fff;cursor:pointer;transition:.15s}
-.jstep:hover{border-color:var(--pri);transform:translateY(-2px)}
-.jstep b{display:block;font-size:13px;color:var(--pri-ink);margin-bottom:4px}
-.jstep span{font-size:13px;color:var(--sub)}
-.loop{margin-top:12px;font-size:13px;color:var(--sub);display:flex;gap:10px;flex-wrap:wrap}
-.loop span{background:var(--pri-soft);color:var(--pri-ink);padding:5px 10px;border-radius:8px}
-/* form */
-label.f{display:block;margin-bottom:12px}
-label.f>span{display:block;font-size:13px;font-weight:600;margin-bottom:5px}
-label.f>span em{font-style:normal;font-weight:400;color:var(--sub)}
-input[type=text],input[type=number],input[type=url],select,textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff;outline:none;transition:border .15s}
+.journey{display:grid;grid-template-columns:1fr;gap:10px}
+.jstep{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff;cursor:pointer;transition:.15s;display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:center}
+.jstep:hover{border-color:var(--pri);transform:translateX(3px)}
+.jstep em{font-style:normal;width:34px;height:34px;border-radius:10px;background:var(--pri-soft);color:var(--pri);font-weight:800;display:grid;place-items:center}
+.jstep b{display:block;font-size:14px}
+.jstep span{font-size:12.5px;color:var(--sub)}
+.loop{margin-top:14px;font-size:12.5px;display:flex;gap:8px;flex-wrap:wrap}
+.loop span{background:var(--pri-soft);color:var(--pri-ink);padding:6px 10px;border-radius:8px;font-weight:600}
+.stat{padding:18px}
+footer.foot{background:var(--navy);color:rgba(255,255,255,.7);font-size:13px;padding:48px 0 20px}
+footer.foot .cols{display:grid;grid-template-columns:1.6fr 1fr 1fr 1.2fr;gap:28px}
+footer.foot h4{color:#fff;font-size:12px;letter-spacing:1.4px;margin:0 0 12px}
+footer.foot a{display:block;color:rgba(255,255,255,.7);margin:6px 0;cursor:pointer}
+footer.foot a:hover{color:#fff}
+footer.foot .logo{color:#fff;margin-bottom:12px}
+footer.foot .logo .lt small{color:rgba(255,255,255,.6)}
+footer.foot .copy{border-top:1px solid rgba(255,255,255,.12);margin-top:32px;padding-top:16px;text-align:center;font-size:12px}
+@media(max-width:760px){footer.foot .cols{grid-template-columns:1fr 1fr}}
+/* ---------- forms ---------- */
+label.f{display:block;margin-bottom:14px}
+label.f>span{display:block;font-size:13px;font-weight:700;margin-bottom:6px}
+label.f>span em{font-style:normal;font-weight:500;color:var(--sub)}
+input[type=text],input[type=number],input[type=url],select,textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:#fff;outline:none;transition:border .15s,box-shadow .15s}
 input:focus,select:focus,textarea:focus{border-color:var(--pri);box-shadow:0 0 0 3px var(--pri-soft)}
 textarea{resize:vertical;min-height:70px}
 input[type=file]{width:100%;max-width:100%;font-size:13px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:600px){.row2{grid-template-columns:minmax(0,1fr)}}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
-.chips label{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:13px;cursor:pointer;background:#fff}
+.chips label{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:8px;padding:6px 11px;font-size:13px;cursor:pointer;background:#fff;font-weight:600;transition:.15s}
+.chips label:hover{border-color:var(--pri)}
 .chips input{accent-color:var(--pri)}
 .chips label:has(input:checked){border-color:var(--pri);background:var(--pri-soft);color:var(--pri-ink)}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--line);background:#fff;border-radius:11px;padding:10px 16px;font-weight:700;cursor:pointer;transition:.15s;white-space:nowrap}
-.btn:hover{border-color:var(--pri)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:11px 18px;font-weight:700;font-size:14px;cursor:pointer;transition:.15s;white-space:nowrap;color:var(--ink)}
+.btn:hover{border-color:var(--pri);color:var(--pri)}
 .btn.pri{background:var(--pri);border-color:var(--pri);color:#fff}
-.btn.pri:hover{background:var(--pri-ink)}
-.btn.coral{background:var(--coral);border-color:var(--coral);color:#fff}
+.btn.pri:hover{background:var(--pri-ink);border-color:var(--pri-ink);color:#fff}
+.btn.coral{background:var(--pri);border-color:var(--pri);color:#fff}
 .btn.good{background:var(--good);border-color:var(--good);color:#fff}
-.btn.sm{padding:6px 11px;font-size:13px;border-radius:9px}
+.btn.good:hover{color:#fff;filter:brightness(.95)}
+.btn.lg{padding:14px 24px;font-size:14.5px}
+.btn.sm{padding:6px 11px;font-size:12.5px;border-radius:7px}
 .btn.block{width:100%}
 .btn:disabled{opacity:.55;cursor:not-allowed}
 .muted{color:var(--sub);font-size:13px}
-.hint{font-size:12.5px;color:var(--sub);background:var(--bg);border-radius:10px;padding:10px 12px}
-/* pipeline */
-.pipe{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12.5px}
-.pipe .n{padding:6px 10px;border-radius:9px;border:1px solid var(--line);background:#fff;color:var(--sub);transition:.2s}
+.hint{font-size:12.5px;color:var(--sub);background:var(--bg-soft);border:1px solid #efedf8;border-radius:10px;padding:10px 12px}
+.hint svg.ic{color:var(--pri)}
+/* ---------- pipeline ---------- */
+.pipe{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12px;font-weight:600}
+.pipe .n{padding:5px 10px;border-radius:7px;border:1px solid var(--line);background:#fff;color:var(--sub);transition:.2s}
 .pipe .n.run{border-color:var(--pri);color:var(--pri-ink);background:var(--pri-soft);animation:pulse 1s infinite}
-.pipe .n.done{border-color:var(--good);color:var(--good);background:var(--good-soft)}
+.pipe .n.done{border-color:#bfe8d5;color:var(--good);background:var(--good-soft)}
 .pipe .arr{color:#c9c5d8}
 @keyframes pulse{50%{opacity:.55}}
-/* result */
-.empty{text-align:center;padding:50px 20px;color:var(--sub)}
-.empty .ico{font-size:40px;margin-bottom:8px}
-.res-head{display:flex;align-items:flex-start;gap:12px;justify-content:space-between;flex-wrap:wrap;margin-bottom:16px}
-.badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--pri-soft);color:var(--pri-ink)}
+/* ---------- results ---------- */
+.empty{text-align:center;padding:52px 20px;color:var(--sub)}
+.empty .ico{font-size:34px;margin-bottom:10px;color:var(--pri)}
+.empty .ico svg.ic{stroke-width:1.4}
+.chloe-av{width:42px;height:42px;border-radius:50%;object-fit:cover;flex:none;border:2px solid #fff;box-shadow:0 0 0 2px var(--pri-soft)}
+.chloe-av.lg{width:84px;height:84px;margin-bottom:12px}
+.empty.working .chloe-av{animation:ring 1.4s infinite}
+@keyframes ring{0%{box-shadow:0 0 0 0 rgba(75,63,214,.45)}100%{box-shadow:0 0 0 18px rgba(75,63,214,0)}}
+.res-head{display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap;margin-bottom:18px}
+.res-head .rh{display:flex;align-items:center;gap:12px}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:6px;background:var(--pri-soft);color:var(--pri-ink);white-space:nowrap}
 .badge.good{background:var(--good-soft);color:var(--good)} .badge.warn{background:var(--warn-soft);color:var(--warn)} .badge.bad{background:var(--bad-soft);color:var(--bad)} .badge.coral{background:var(--coral-soft);color:var(--coral)}
-.block{margin-top:18px}
-.block>h3{display:flex;align-items:center;gap:8px}
-.sum{background:var(--pri-soft);color:var(--pri-ink);border-radius:12px;padding:12px 14px;font-weight:600}
+.block{margin-top:22px}
+.sum{background:var(--pri-soft);color:var(--pri-ink);border-left:4px solid var(--pri);border-radius:8px;padding:13px 16px;font-weight:700;display:flex;gap:8px;align-items:flex-start}
+.sum svg.ic{margin-top:3px}
 ul.clean{margin:0;padding-left:18px} ul.clean li{margin:3px 0}
 .checks{display:flex;flex-direction:column;gap:5px}
-.checks div{font-size:13px;padding:7px 10px;border-radius:9px}
-.checks .ok{background:var(--good-soft);color:#0d7a4f} .checks .no{background:var(--warn-soft);color:#8a5a00}
-.mini{border:1px solid var(--line);border-radius:12px;padding:14px;background:#fff}
-.mini .t{font-weight:700;margin-bottom:4px}
-.adcard{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff}
-.adcard .img{height:96px;background:linear-gradient(135deg,#efeaff,#ffe6e2);display:flex;align-items:flex-end;padding:10px 12px;font-size:12px;color:var(--sub)}
+.checks div{font-size:13px;padding:8px 11px;border-radius:8px}
+.checks .ok{background:var(--good-soft);color:#0b7650} .checks .no{background:var(--warn-soft);color:#8a5a00}
+.mini{border:1px solid var(--line);border-radius:10px;padding:14px;background:#fff}
+.mini .t{font-weight:800;margin-bottom:4px}
+.adcard{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+.adcard .img{height:96px;background:linear-gradient(135deg,#efeaff,#e9f0ff);display:flex;align-items:flex-end;gap:6px;padding:10px 12px;font-size:12px;color:var(--sub)}
 .adcard .bd{padding:12px 14px}
-.adcard .hl{font-weight:800;font-size:15.5px;margin:4px 0}
-.adcard .cta{display:inline-block;margin-top:8px;background:var(--ink);color:#fff;font-size:12.5px;padding:5px 10px;border-radius:7px}
+.adcard .hl{font-weight:800;font-size:15.5px;margin:4px 0;color:var(--ink)}
+.adcard .cta{display:inline-block;margin-top:8px;background:var(--ink);color:#fff;font-size:12.5px;padding:5px 10px;border-radius:6px}
 .bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:6px}
-.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--pri),var(--coral));border-radius:99px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--pri),var(--pri-2));border-radius:99px}
 table{width:100%;border-collapse:collapse;font-size:13.5px}
-th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
-th{font-size:12.5px;color:var(--sub);font-weight:600}
+th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11.5px;color:var(--sub);font-weight:800;letter-spacing:.4px;text-transform:uppercase}
 td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .tscroll{overflow-x:auto}
-.inf{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:14px;background:#fff}
-.inf+.inf{margin-top:10px}
 .avatar{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800}
 .score{text-align:center;min-width:64px}
-.score b{font-size:22px;display:block;color:var(--pri-ink)}
+.score b{font-size:24px;display:block;color:var(--pri);letter-spacing:-.5px}
 .score span{font-size:11.5px;color:var(--sub)}
-.inf .meta{font-size:12.5px;color:var(--sub)}
-.dm{white-space:pre-wrap;background:#f3f1fa;border-radius:14px;padding:14px;font-size:14px}
-.contract{border:1px solid var(--line);border-radius:12px;padding:16px;max-height:340px;overflow:auto;background:#fffefb;font-size:13.5px}
+.dm{white-space:pre-wrap;background:var(--bg-soft);border:1px solid #efedf8;border-radius:12px;padding:14px;font-size:14px}
+.contract{border:1px solid var(--line);border-radius:10px;padding:16px;max-height:340px;overflow:auto;background:#fcfcfe;font-size:13.5px}
 .contract h4{margin:0 0 10px;text-align:center}
 .contract p{margin:0 0 9px}
-.approve{position:sticky;bottom:12px;margin-top:22px;background:#fff;border:1px solid var(--line);box-shadow:0 10px 30px rgba(30,20,80,.12);border-radius:16px;padding:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.approve .who{font-weight:700;margin-right:auto}
-.approve .who small{display:block;font-weight:400;color:var(--sub);font-size:12.5px}
+.approve{position:sticky;bottom:12px;margin-top:24px;background:#fff;border:1px solid var(--line);box-shadow:0 14px 34px rgba(21,18,59,.14);border-radius:14px;padding:12px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.approve .who{font-weight:800;margin-right:auto}
+.approve .who small{display:block;font-weight:500;color:var(--sub);font-size:12.5px}
 .revise{width:100%;display:none;gap:8px}
 .revise.on{display:flex}
 .revise textarea{min-height:44px;flex:1}
-.timechip{display:inline-flex;gap:6px;align-items:center;font-size:12.5px;color:var(--sub)}
+.timechip{display:inline-flex;gap:6px;align-items:center;font-size:12.5px;color:var(--sub);flex-wrap:wrap}
 .timechip b{color:var(--good)}
 .chrow{display:grid;grid-template-columns:1.3fr repeat(5,1fr) auto;gap:6px;align-items:center;margin-bottom:6px}
-.chrow input{padding:7px 8px;font-size:13px}
-.chhead{font-size:11.5px;color:var(--sub);font-weight:600}
+.chrow input{padding:8px;font-size:13px}
+.chhead{font-size:11px;color:var(--sub);font-weight:800;letter-spacing:.3px}
 @media(max-width:600px){.chrow{grid-template-columns:1fr 1fr 1fr}.chhead{display:none}}
 .x{border:0;background:none;color:var(--sub);cursor:pointer;font-size:16px}
 .hist{display:flex;gap:12px;align-items:flex-start;border-bottom:1px solid var(--line);padding:14px 0}
 .hist:last-child{border-bottom:0}
-.hist .ic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;flex:none;background:var(--pri-soft)}
+.hist .ic{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;flex:none;background:var(--pri-soft);color:var(--pri)}
 .hist .body{flex:1;min-width:0}
-.hist .ttl{font-weight:700}
-.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(30px);background:var(--ink);color:#fff;padding:11px 18px;border-radius:12px;font-size:14px;opacity:0;transition:.25s;z-index:99;pointer-events:none;max-width:calc(100% - 32px)}
+.hist .ttl{font-weight:800}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(30px);background:var(--navy);color:#fff;padding:11px 18px;border-radius:10px;font-size:14px;opacity:0;transition:.25s;z-index:99;pointer-events:none;max-width:calc(100% - 32px)}
 .toast.on{opacity:1;transform:translateX(-50%)}
-.err{background:var(--bad-soft);color:#a3283a;border-radius:12px;padding:14px;font-size:14px}
-pre.raw{white-space:pre-wrap;background:#f3f1fa;border-radius:12px;padding:14px;font-size:13px;max-height:420px;overflow:auto}
-.kv{display:grid;grid-template-columns:110px 1fr;gap:6px 10px;font-size:14px}
-.kv dt{color:var(--sub)} .kv dd{margin:0;font-weight:600}
-.code{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;background:var(--bg);padding:2px 6px;border-radius:6px;word-break:break-all}
-/* influencer v2 */
-.tierprev{margin:-2px 0 12px}
+.err{background:var(--bad-soft);color:#a3283a;border-radius:10px;padding:14px;font-size:14px}
+pre.raw{white-space:pre-wrap;background:var(--bg-soft);border-radius:10px;padding:14px;font-size:13px;max-height:420px;overflow:auto}
+.code{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;background:var(--bg-soft);padding:2px 6px;border-radius:6px;word-break:break-all}
+/* ---------- influencer ---------- */
+.tierprev{margin:-2px 0 14px}
 .stack{display:flex;height:10px;border-radius:99px;overflow:hidden;background:var(--line);margin-bottom:6px}
 .stack i{display:block;height:100%}
-.stack.big{height:30px;border-radius:10px}
+.stack.big{height:32px;border-radius:8px}
 .stack.big i{display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;font-style:normal;white-space:nowrap;overflow:hidden}
 .tdot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
-.pf{display:grid;grid-template-columns:auto minmax(0,1fr) 130px;gap:14px;border:1px solid var(--line);border-radius:14px;padding:14px;background:#fff}
+.pf{display:grid;grid-template-columns:auto minmax(0,1fr) 130px;gap:14px;border:1px solid var(--line);border-radius:12px;padding:16px;background:#fff}
 .pf+.pf{margin-top:10px}
 .pf .meta{font-size:12.5px;color:var(--sub)}
 .bd{display:flex;flex-direction:column;gap:3px;margin-top:8px;text-align:left}
@@ -177,26 +269,25 @@ pre.raw{white-space:pre-wrap;background:#f3f1fa;border-radius:12px;padding:14px;
 .bd s{display:block;height:5px;border-radius:9px;background:var(--line);overflow:hidden;text-decoration:none}
 .bd s b{display:block;height:100%;background:var(--pri)}
 .ptabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
-.ptabs button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-weight:600;cursor:pointer}
-.ptabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.ptabs button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 12px;font-weight:700;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.ptabs button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
 .fitbar{display:inline-block;width:56px;height:6px;border-radius:9px;background:var(--line);vertical-align:middle;margin-left:6px;overflow:hidden}
 .fitbar b{display:block;height:100%;background:var(--pri)}
-tr.inpf td{background:#f7f6ff}
+tr.inpf td{background:#f8f7ff}
 @media(max-width:600px){.pf{grid-template-columns:auto minmax(0,1fr)}.pf .score{grid-column:1/-1;text-align:left}}
-/* creative studio */
-.crc{border:1px solid var(--line);border-radius:16px;padding:16px;background:#fff}
+/* ---------- creative studio ---------- */
+.crc{border:1px solid var(--line);border-radius:14px;padding:16px;background:#fff}
 .crc+.crc{margin-top:14px}
 .crc-grid{display:grid;grid-template-columns:minmax(0,280px) minmax(0,1fr);gap:18px;align-items:start}
 @media(max-width:760px){.crc-grid{grid-template-columns:1fr}}
-.mk{border-radius:14px;overflow:hidden;box-shadow:0 6px 20px rgba(0,0,0,.12)}
+.mk{border-radius:14px;overflow:hidden;box-shadow:0 8px 22px rgba(21,18,59,.12)}
 .mk img{display:block;width:100%;background:#eee;min-height:40px}
 .mk-feed{background:#fff;border:1px solid var(--line)}
 .mk-top{display:flex;gap:8px;align-items:center;padding:8px 10px;font-size:12.5px}
-.mk-av{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--pri),var(--coral))}
+.mk-av{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--pri),var(--pri-2))}
 .mk-bot{padding:8px 10px;font-size:12.5px}
-.mk-phone{position:relative;max-width:230px;margin:0 auto;border-radius:24px;border:6px solid #111;background:#111}
+.mk-phone{position:relative;max-width:230px;margin:0 auto;border-radius:26px;border:6px solid #111;background:#111}
 .mk-side{position:absolute;right:8px;bottom:64px;color:#fff;font-size:17px;line-height:2;text-align:center;text-shadow:0 1px 4px rgba(0,0,0,.5)}
-.mk-cap{position:absolute;left:10px;right:44px;bottom:12px;color:#fff;font-size:11.5px;text-shadow:0 1px 4px rgba(0,0,0,.6)}
 .mk-kakao{background:#fff;border:1px solid var(--line);padding:10px}
 .mk-kakao .row{height:12px;border-radius:6px;background:#f0eff5;margin:8px 0}
 .mk-kakao img{border-radius:8px}
@@ -204,99 +295,183 @@ tr.inpf td{background:#f7f6ff}
 .mk-naver .ad{font-size:11.5px;color:var(--sub)}
 .mk-naver .tt{color:#1a0dab;font-size:16px;font-weight:700;margin:2px 0}
 .mk-naver .url{color:#0b8a35;font-size:12px;margin-bottom:4px}
-.var{border:1px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;margin-bottom:8px;transition:.15s}
+.var{border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;margin-bottom:8px;transition:.15s}
 .var:hover{border-color:var(--pri)}
 .var.on{border-color:var(--pri);background:var(--pri-soft)}
-.var .hl{font-weight:800}
-.len{font-size:11px;color:var(--sub);font-weight:400} .len.over{color:var(--bad);font-weight:700}
+.var .hl{font-weight:800;color:var(--ink)}
+.len{font-size:11px;color:var(--sub);font-weight:500} .len.over{color:var(--bad);font-weight:800}
 .photo-prev{display:flex;gap:8px;align-items:center}
 .photo-prev img{width:44px;height:44px;object-fit:contain;border-radius:8px;border:1px solid var(--line);background:#fff}
-footer{color:var(--sub);font-size:12.5px;text-align:center;padding:20px}
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+  <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></symbol>
+  <symbol id="i-trend" viewBox="0 0 24 24"><path d="M22 7l-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></symbol>
+  <symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.5 13L17 22l-5-3-5 3 1.5-9"/></symbol>
+  <symbol id="i-message" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></symbol>
+  <symbol id="i-film" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M7 3v18M17 3v18M2 12h20M2 7.5h5M2 16.5h5M17 7.5h5M17 16.5h5"/></symbol>
+  <symbol id="i-checkc" viewBox="0 0 24 24"><path d="M22 11.1V12a10 10 0 1 1-5.9-9.1"/><path d="M9 11l3 3L22 4"/></symbol>
+  <symbol id="i-calc" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/></symbol>
+  <symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></symbol>
+  <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6L4 20a1 1 0 0 0 .9 1.5h14.2A1 1 0 0 0 20 20L14 9V3"/><path d="M7 15h10"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 17v5M9 10.8V4h6v6.8l2 3.2H7z"/></symbol>
+  <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.7-.9l-.8-1.2A2 2 0 0 0 7.9 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"/></symbol>
+  <symbol id="i-bar" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M8 17V9M13 17V5M18 17v-6"/></symbol>
+  <symbol id="i-insta" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17.5 6.5h.01"/></symbol>
+  <symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="4"/><path d="M10 9l5 3-5 3z"/></symbol>
+  <symbol id="i-palette" viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r="1"/><circle cx="17.5" cy="10.5" r="1"/><circle cx="8.5" cy="7.5" r="1"/><circle cx="6.5" cy="12.5" r="1"/><path d="M12 2a10 10 0 0 0 0 20c1 0 1.5-.8 1.5-1.6 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.9.7-1.7 1.6-1.7H16a6 6 0 0 0 6-6c0-4.9-4.5-8.5-10-8.5z"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 3v4M17 5h4"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v3M12 20v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M1 12h3M20 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></symbol>
+  <symbol id="i-rocket" viewBox="0 0 24 24"><path d="M4.5 16.5c-1.5 1.3-2 5-2 5s3.7-.5 5-2c.7-.8.7-2.1-.1-2.9a2.2 2.2 0 0 0-2.9-.1z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.9A12.9 12.9 0 0 1 22 2c0 2.7-.8 7.5-6 11a22.4 22.4 0 0 1-4 2z"/><path d="M9 12H4s.6-3 2-4c1.6-1.1 5 0 5 0M12 15v5s3-.6 4-2c1.1-1.6 0-5 0-5"/></symbol>
+  <symbol id="i-smile" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/></symbol>
+</svg>
+<div class="topbar"><div class="wrap"><span><b>NEW</b>프롬프트 한 줄로 매체별 광고 시안까지 — 클로이 소재 스튜디오</span><a data-go="cre">지금 써보기 <svg class="ic"><use href="#i-arrow"/></svg></a></div></div>
 <header class="top">
-  <div class="wrap">
-    <div class="logo" data-go="home"><div class="mark">C</div><div>Chloe <small>브랜드를 위한 AI 마케팅 파트너</small></div></div>
-    <div class="spacer"></div>
-    <span id="modePill" class="pill demo" data-go="settings"><span class="dot"></span><span id="modeText">데모 모드</span></span>
-  </div>
-  <div class="wrap">
+  <div class="wrap nav">
+    <a class="logo" data-go="home" aria-label="Chloe 홈">
+      <svg viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="9" fill="#4b3fd6"/><path d="M22.6 11.6a7.6 7.6 0 1 0 0 10.8" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/><circle cx="24.6" cy="17" r="2.2" fill="#b9b1ff"/></svg>
+      <span class="lt"><b>CHLOE</b><small>AI MARKETING</small></span>
+    </a>
     <nav class="tabs" id="tabs">
       <button data-go="home" class="on">홈</button>
-      <button data-go="perf">① 퍼포먼스 마케팅</button>
-      <button data-go="cre">🎨 소재 스튜디오</button>
-      <button data-go="inf">② 인플루언서 마케팅</button>
-      <button data-go="rep">③ 성과 분석</button>
+      <button data-go="perf">퍼포먼스</button>
+      <button data-go="cre">소재 스튜디오</button>
+      <button data-go="inf">인플루언서</button>
+      <button data-go="rep">성과 분석</button>
       <button data-go="hist">승인·협업 이력</button>
-      <button data-go="settings">n8n 연결 설정</button>
+      <button data-go="settings">연결 설정</button>
     </nav>
+    <div class="nav-right">
+      <span id="modePill" class="pill demo" data-go="settings"><span class="dot"></span><span id="modeText">데모 모드</span></span>
+      <button class="btn pri" data-go="perf">클로이 시작하기</button>
+    </div>
   </div>
 </header>
 
-<main class="wrap">
+<main>
 <!-- ================= HOME ================= -->
 <section class="page on" id="p-home">
-  <div class="hero">
-    <span class="tag">인공지능 비즈니스전략 3조 · MVP</span>
-    <h1>대표님은 제품에 집중하세요.<br>마케팅은 클로이가 할게요.</h1>
-    <p>퇴근 후 새벽 1시까지 하던 타겟 분석, 광고 문구, 인플루언서 섭외, 성과 정리를 업무 시간 안에. 클로이가 초안을 만들고, 대표님은 <b>검토하고 승인</b>만 하면 됩니다.</p>
-    <div class="actions">
-      <button class="btn coral" data-go="perf">광고 소재 만들기 시작 →</button>
-      <button class="btn ghost" data-go="cre">프롬프트로 광고 소재 만들기</button>
-      <button class="btn ghost" data-go="inf">인플루언서 찾기</button>
+  <div class="hero"><div class="wrap">
+    <div>
+      <div class="eyebrow">AI Marketing Partner · 1인 브랜드 대표를 위한</div>
+      <h1>마케팅은 클로이가,<br>대표님은 <span class="hl">제품</span>에<br>집중하세요.</h1>
+      <p class="sub">타겟 분석부터 광고 소재, 인플루언서 섭외, 성과 정리까지. 클로이가 초안을 만들고, 대표님은 검토하고 승인만 하면 됩니다.</p>
+      <div class="actions">
+        <button class="btn pri lg" data-go="perf">클로이 시작하기 <svg class="ic"><use href="#i-arrow"/></svg></button>
+        <button class="btn lg" data-go="cre">광고 소재 만들어보기</button>
+      </div>
+      <div class="feat4">
+        <div><svg class="ic"><use href="#i-target"/></svg><span><b>성과 중심</b>목표에 맞춘 제안</span></div>
+        <div><svg class="ic"><use href="#i-bar"/></svg><span><b>데이터 기반</b>숫자는 코드가 계산</span></div>
+        <div><svg class="ic"><use href="#i-shield"/></svg><span><b>대표 최종 승인</b>초안만 클로이가</span></div>
+        <div><svg class="ic"><use href="#i-search"/></svg><span><b>투명한 근거</b>추천 이유 공개</span></div>
+      </div>
     </div>
-  </div>
+    <div class="visual">
+      <div class="frame"><img src="assets/chloe-hero.jpg" alt="창가 사무실에서 마케팅 계획을 세우는 AI 마케터 클로이 일러스트" width="1400" height="992"></div>
+      <div class="float f1"><div class="k">아낀 시간</div><div class="v" id="stSaved2">0분</div><div class="up">수작업 대비</div></div>
+      <div class="float f2"><div class="k">평균 단축률</div><div class="v" id="stRate2">-</div><div class="minibars"><i style="height:30%"></i><i style="height:45%"></i><i style="height:40%"></i><i style="height:62%"></i><i style="height:70%"></i><i style="height:100%"></i></div></div>
+      <div class="float f3"><img src="assets/chloe-face.jpg" alt=""><div><b>클로이</b><div class="muted"><span class="on"></span>AI 마케터 · 업무 중</div></div></div>
+    </div>
+  </div></div>
 
-  <div class="grid g4" style="margin-top:16px">
-    <div class="card stat"><div class="k">아낀 시간 (누적)</div><div class="v" id="stSaved">0분</div><div class="s">수작업 예상 시간 대비</div></div>
-    <div class="card stat"><div class="k">승인 완료 업무</div><div class="v" id="stDone">0건</div><div class="s">대표 승인 후 저장된 결과</div></div>
-    <div class="card stat"><div class="k">평균 단축률</div><div class="v" id="stRate">-</div><div class="s">검증 기준: 50% 이상 단축</div></div>
-    <div class="card stat"><div class="k">진행 중 협업</div><div class="v" id="stCollab">0명</div><div class="s">승인된 인플루언서</div></div>
-  </div>
+  <div class="trust"><div class="wrap">
+    <small>CONNECTED WITH</small>
+    <span><i></i>n8n</span><span><i></i>OpenAI</span><span><i></i>YouTube Data API</span><span><i></i>Google Sheets</span><span><i></i>Instagram</span><span><i></i>TikTok</span><span><i></i>네이버</span><span><i></i>카카오</span>
+  </div></div>
 
-  <div class="grid g2" style="margin-top:16px">
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <h2>우리 제품 정보</h2><span class="muted">모든 기능에서 공통으로 사용</span>
-      </div>
-      <label class="f"><span>제품명</span><input type="text" id="prName"></label>
-      <div class="row2">
-        <label class="f"><span>카테고리</span><select id="prCat"><option>뷰티</option><option>푸드</option><option>패션</option><option>리빙</option><option>테크</option></select></label>
-        <label class="f"><span>판매가 (원)</span><input type="number" id="prPrice"></label>
-      </div>
-      <label class="f"><span>제품 특징 <em>(입력한 내용만 사실로 사용해요)</em></span><textarea id="prFeat" rows="3"></textarea></label>
-      <label class="f"><span>예상 타겟</span><input type="text" id="prTarget"></label>
-      <div class="row2">
-        <label class="f"><span>타겟 성별</span><select id="prGender"><option>여성</option><option>남성</option><option>무관</option></select></label>
-        <label class="f"><span>콘텐츠 키워드 <em>(쉼표로 구분)</em></span><input type="text" id="prKw"></label>
-      </div>
-      <label class="f"><span>타겟 연령대 <em>(인플루언서 시청층과 비교)</em></span><div class="chips" id="prAges"><label><input type="checkbox" value="10대">10대</label><label><input type="checkbox" value="20대">20대</label><label><input type="checkbox" value="30대">30대</label><label><input type="checkbox" value="40대">40대</label><label><input type="checkbox" value="50대+">50대+</label></div></label>
-      <label class="f" style="margin:0"><span>브랜드 톤</span><input type="text" id="prTone"></label>
+  <div class="sec"><div class="wrap">
+    <div class="sec-head">
+      <div><div class="eyebrow">What Chloe does</div><h2>대표님 대신 처리하는 <span class="hl">마케팅 업무</span></h2></div>
+      <a class="more" data-go="perf">전체 흐름 시작하기 <svg class="ic"><use href="#i-arrow"/></svg></a>
     </div>
-    <div class="card">
-      <h2>클로이 통합 마케팅 저니맵</h2>
-      <p class="muted" style="margin:0 0 14px">각 단계를 누르면 해당 업무로 이동해요.</p>
-      <div class="journey">
-        <div class="jstep" data-go="perf"><b>① 전략·타겟</b><span>제품·타겟·예산, KPI 설정</span></div>
-        <div class="jstep" data-go="cre"><b>② 발굴·소재</b><span>트렌드 인사이트, 프롬프트로 광고 소재</span></div>
-        <div class="jstep" data-go="inf"><b>③ 협의·제작</b><span>플랫폼·티어별 인플루언서 추천, DM, 계약 초안</span></div>
-        <div class="jstep" data-go="inf"><b>④ 집행·게시</b><span>콘텐츠 브리프, 게시·사용권 확인</span></div>
-        <div class="jstep" data-go="rep"><b>⑤ 성과·개선</b><span>CTR·CVR·CPA·ROAS, 예산 조정</span></div>
-      </div>
-      <div class="loop">
-        <span>연결 ① 광고 성과 → 다음 인플루언서 추천에 반영</span>
-        <span>연결 ② 허가된 협업 콘텐츠 → 광고 소재로 활용</span>
-      </div>
-      <div class="hint" style="margin-top:14px">⚙ 백엔드: 프론트 → <b>n8n Webhook</b> → Code(데이터 정리) → <b>AI Agent</b> → Code(결과 검증) → 응답. 숫자 계산과 검증은 코드가, 글쓰기와 판단 보조는 AI가 맡아요.</div>
+    <div class="svc">
+      <div data-go="perf"><svg class="ic"><use href="#i-target"/></svg><b>전략 · 타겟</b><span>제품에 맞는 타겟과 트렌드 인사이트</span></div>
+      <div data-go="cre"><svg class="ic"><use href="#i-palette"/></svg><b>광고 소재</b><span>프롬프트로 매체별 카피와 이미지 시안</span></div>
+      <div data-go="inf"><svg class="ic"><use href="#i-users"/></svg><b>인플루언서 추천</b><span>플랫폼·티어별 예산 맞춤 조합</span></div>
+      <div data-go="inf"><svg class="ic"><use href="#i-message"/></svg><b>DM · 계약 초안</b><span>첫 제안 메시지와 표준 계약서</span></div>
+      <div data-go="rep"><svg class="ic"><use href="#i-bar"/></svg><b>성과 분석</b><span>CTR·CVR·CPA·ROAS 자동 계산</span></div>
+      <div data-go="rep"><svg class="ic"><use href="#i-wallet"/></svg><b>예산 조정</b><span>규칙 안은 자동, 밖은 대표 승인</span></div>
     </div>
-  </div>
+  </div></div>
+
+  <div class="band"><div class="wrap">
+    <div>
+      <div class="eyebrow">Real Results</div>
+      <h2>시간은 줄이고,<br>결정은 대표님이.</h2>
+      <p>승인한 업무마다 수작업 예상 시간과 실제 걸린 시간을 비교해 기록해요.</p>
+      <button class="btn" data-go="hist">승인 이력 보기 <svg class="ic"><use href="#i-arrow"/></svg></button>
+    </div>
+    <div class="bstats">
+      <div><svg class="ic"><use href="#i-clock"/></svg><div class="v" id="stSaved">0분</div><div class="k">아낀 시간</div><div class="s">수작업 예상 대비</div></div>
+      <div><svg class="ic"><use href="#i-checkc"/></svg><div class="v" id="stDone">0건</div><div class="k">승인 완료 업무</div><div class="s">대표 승인 후 저장</div></div>
+      <div><svg class="ic"><use href="#i-rocket"/></svg><div class="v" id="stRate">-</div><div class="k">평균 단축률</div><div class="s">검증 기준 50% 이상</div></div>
+      <div><svg class="ic"><use href="#i-smile"/></svg><div class="v" id="stCollab">0명</div><div class="k">진행 중 협업</div><div class="s">승인된 인플루언서</div></div>
+    </div>
+  </div></div>
+
+  <div class="quote"><div class="wrap">
+    <div class="q">“</div>
+    <p>안녕하세요, 클로이예요. 퇴근 후 새벽까지 하던 마케팅 업무, 이제 업무 시간 안에 끝내요. 초안은 제가, 결정은 대표님이 하세요.</p>
+    <div class="who2"><img src="assets/chloe-face.jpg" alt="클로이"><div><b>클로이 (Chloe)</b><span>AI 마케팅 에이전트</span></div></div>
+  </div></div>
+
+  <div class="sec" style="background:var(--bg-soft)"><div class="wrap">
+    <div class="sec-head"><div><div class="eyebrow">Your Product</div><h2>제품 정보는 <span class="hl">한 번만</span> 입력하세요</h2></div><span class="muted">모든 기능에서 공통으로 사용돼요</span></div>
+    <div class="grid g2">
+      <div class="card">
+        <label class="f"><span>제품명</span><input type="text" id="prName"></label>
+        <div class="row2">
+          <label class="f"><span>카테고리</span><select id="prCat"><option>뷰티</option><option>푸드</option><option>패션</option><option>리빙</option><option>테크</option></select></label>
+          <label class="f"><span>판매가 (원)</span><input type="number" id="prPrice"></label>
+        </div>
+        <label class="f"><span>제품 특징 <em>(입력한 내용만 사실로 사용해요)</em></span><textarea id="prFeat" rows="3"></textarea></label>
+        <label class="f"><span>예상 타겟</span><input type="text" id="prTarget"></label>
+        <div class="row2">
+          <label class="f"><span>타겟 성별</span><select id="prGender"><option>여성</option><option>남성</option><option>무관</option></select></label>
+          <label class="f"><span>콘텐츠 키워드 <em>(쉼표로 구분)</em></span><input type="text" id="prKw"></label>
+        </div>
+        <label class="f"><span>타겟 연령대 <em>(인플루언서 시청층과 비교)</em></span><div class="chips" id="prAges"><label><input type="checkbox" value="10대">10대</label><label><input type="checkbox" value="20대">20대</label><label><input type="checkbox" value="30대">30대</label><label><input type="checkbox" value="40대">40대</label><label><input type="checkbox" value="50대+">50대+</label></div></label>
+        <label class="f" style="margin:0"><span>브랜드 톤</span><input type="text" id="prTone"></label>
+      </div>
+      <div class="card">
+        <h3><svg class="ic"><use href="#i-repeat"/></svg>클로이 통합 마케팅 저니맵</h3>
+        <p class="muted" style="margin:-6px 0 14px">단계를 누르면 해당 업무로 이동해요.</p>
+        <div class="journey">
+          <div class="jstep" data-go="perf"><em>1</em><div><b>전략 · 타겟</b><span>제품·타겟·예산, KPI 설정</span></div></div>
+          <div class="jstep" data-go="cre"><em>2</em><div><b>발굴 · 소재</b><span>트렌드 인사이트, 프롬프트로 광고 소재</span></div></div>
+          <div class="jstep" data-go="inf"><em>3</em><div><b>협의 · 제작</b><span>플랫폼·티어별 인플루언서 추천, DM, 계약 초안</span></div></div>
+          <div class="jstep" data-go="inf"><em>4</em><div><b>집행 · 게시</b><span>콘텐츠 브리프, 게시·사용권 확인</span></div></div>
+          <div class="jstep" data-go="rep"><em>5</em><div><b>성과 · 개선</b><span>CTR·CVR·CPA·ROAS, 예산 조정</span></div></div>
+        </div>
+        <div class="loop"><span>연결 ① 광고 성과 → 다음 인플루언서 추천</span><span>연결 ② 허가된 협업 콘텐츠 → 광고 소재</span></div>
+        <div class="hint" style="margin-top:14px"><svg class="ic"><use href="#i-gear"/></svg> 백엔드: 화면 → <b>n8n Webhook</b> → Code(데이터 정리) → <b>AI Agent</b> → Code(결과 검증) → 응답. 숫자는 코드가, 글쓰기는 AI가 맡아요.</div>
+      </div>
+    </div>
+  </div></div>
 </section>
 
 <!-- ================= PERFORMANCE ================= -->
 <section class="page" id="p-perf">
-  <h1>① 퍼포먼스 마케팅</h1>
-  <p class="lead">타겟 분석 · 트렌드 인사이트 · 예산 배분 · 광고 소재 · KPI 운영 규칙을 한 번에.</p>
+  <div class="page-head"><div class="eyebrow">Performance · 01</div><h1>퍼포먼스 마케팅</h1><p class="lead">타겟 분석 · 트렌드 인사이트 · 예산 배분 · 광고 소재 · KPI 운영 규칙을 한 번에.</p></div>
   <div class="split">
     <div class="card">
       <h3>이번 캠페인 조건</h3>
@@ -313,20 +488,19 @@ footer{color:var(--sub);font-size:12.5px;text-align:center;padding:20px}
         </div>
       </label>
       <div class="hint" id="pfAssets" style="margin-bottom:12px"></div>
-      <button class="btn pri block" id="pfRun">✨ 클로이에게 맡기기</button>
+      <button class="btn pri block" id="pfRun"><svg class="ic"><use href="#i-spark"/></svg> 클로이에게 맡기기</button>
       <div class="muted" style="margin-top:8px;text-align:center">수작업 예상 약 3시간 (리서치·문구·예산표)</div>
     </div>
     <div>
       <div class="card" style="margin-bottom:12px;padding:14px 18px"><div class="pipe" id="pfPipe"></div></div>
-      <div class="card" id="pfOut"><div class="empty"><div class="ico">🎯</div>조건을 입력하고 <b>클로이에게 맡기기</b>를 눌러주세요.</div></div>
+      <div class="card" id="pfOut"><div class="empty"><div class="ico"><svg class="ic"><use href="#i-target"/></svg></div>조건을 입력하고 <b>클로이에게 맡기기</b>를 눌러주세요.</div></div>
     </div>
   </div>
 </section>
 
 <!-- ================= CREATIVE ================= -->
 <section class="page" id="p-cre">
-  <h1>🎨 광고 소재 스튜디오</h1>
-  <p class="lead">만들고 싶은 광고를 말로 적으면, 매체 규격에 맞는 카피 3안과 이미지 시안이 나와요.</p>
+  <div class="page-head"><div class="eyebrow">Creative Studio</div><h1>광고 소재 스튜디오</h1><p class="lead">만들고 싶은 광고를 말로 적으면, 매체 규격에 맞는 카피 3안과 이미지 시안이 나와요.</p></div>
   <div class="split">
     <div class="card">
       <div class="hint" style="margin-bottom:12px" id="creProd"></div>
@@ -338,20 +512,19 @@ footer{color:var(--sub);font-size:12.5px;text-align:center;padding:20px}
         <label class="f"><span>제품 사진 <em>(선택)</em></span><input type="file" id="crPhoto" accept="image/*"></label>
       </div>
       <div id="crPhotoPrev" class="muted" style="margin:-4px 0 12px"></div>
-      <button class="btn pri block" id="crRun">🎨 소재 만들기</button>
+      <button class="btn pri block" id="crRun"><svg class="ic"><use href="#i-palette"/></svg> 소재 만들기</button>
       <div class="muted" style="margin-top:8px;text-align:center">수작업 예상 약 2시간 30분 (매체별 카피 3안 + 시안) · AI 이미지는 1장당 20~40초</div>
     </div>
     <div>
       <div class="card" style="margin-bottom:12px;padding:14px 18px"><div class="pipe" id="crPipe"></div></div>
-      <div class="card" id="crOut"><div class="empty"><div class="ico">🎨</div>프롬프트를 적고 <b>소재 만들기</b>를 눌러주세요.</div></div>
+      <div class="card" id="crOut"><div class="empty"><div class="ico"><svg class="ic"><use href="#i-palette"/></svg></div>프롬프트를 적고 <b>소재 만들기</b>를 눌러주세요.</div></div>
     </div>
   </div>
 </section>
 
 <!-- ================= INFLUENCER ================= -->
 <section class="page" id="p-inf">
-  <h1>② 인플루언서 마케팅</h1>
-  <p class="lead">인스타그램 · 틱톡 · 유튜브 후보를 메가·매크로·미들·마이크로로 나누고, 예산에 맞는 조합을 추천해요.</p>
+  <div class="page-head"><div class="eyebrow">Influencer · 02</div><h1>인플루언서 마케팅</h1><p class="lead">인스타그램 · 틱톡 · 유튜브 후보를 메가·매크로·미들·마이크로로 나누고, 예산에 맞는 조합을 추천해요.</p></div>
   <div class="split">
     <div class="card">
       <h3>협업 조건</h3>
@@ -362,28 +535,27 @@ footer{color:var(--sub);font-size:12.5px;text-align:center;padding:20px}
       <label class="f"><span>협업 목표</span><select id="ifGoal"><option>신제품 인지도 확대</option><option>구매 전환</option><option>광고용 콘텐츠 확보</option><option>리뷰·후기 확보</option></select></label>
       <label class="f"><span>플랫폼</span>
         <div class="chips" id="ifPlat">
-          <label><input type="checkbox" value="인스타그램" checked>📸 인스타그램</label>
-          <label><input type="checkbox" value="틱톡" checked>🎵 틱톡</label>
-          <label><input type="checkbox" value="유튜브" checked>▶️ 유튜브</label>
+          <label><input type="checkbox" value="인스타그램" checked><svg class="ic"><use href="#i-insta"/></svg> 인스타그램</label>
+          <label><input type="checkbox" value="틱톡" checked><svg class="ic"><use href="#i-music"/></svg> 틱톡</label>
+          <label><input type="checkbox" value="유튜브" checked><svg class="ic"><use href="#i-play"/></svg> 유튜브</label>
         </div>
       </label>
       <label class="f"><span>유튜브 검색어 <em>(n8n 연결 시 YouTube API로 실제 채널 검색)</em></span><input type="text" id="ifYtq"></label>
       <div class="hint" id="ifSrc" style="margin-bottom:10px"></div>
       <div class="hint" id="ifPast" style="margin-bottom:12px"></div>
-      <button class="btn pri block" id="ifRun">🔎 후보 찾고 조합 추천받기</button>
+      <button class="btn pri block" id="ifRun"><svg class="ic"><use href="#i-search"/></svg> 후보 찾고 조합 추천받기</button>
       <div class="muted" style="margin-top:8px;text-align:center">수작업 예상 약 4시간 (탐색·비교·DM·계약서)</div>
     </div>
     <div>
       <div class="card" style="margin-bottom:12px;padding:14px 18px"><div class="pipe" id="ifPipe"></div></div>
-      <div class="card" id="ifOut"><div class="empty"><div class="ico">🤝</div>조건을 확인하고 <b>후보 찾기</b>를 눌러주세요.</div></div>
+      <div class="card" id="ifOut"><div class="empty"><div class="ico"><svg class="ic"><use href="#i-users"/></svg></div>조건을 확인하고 <b>후보 찾기</b>를 눌러주세요.</div></div>
     </div>
   </div>
 </section>
 
 <!-- ================= REPORT ================= -->
 <section class="page" id="p-rep">
-  <h1>③ 성과 분석 · 예산 조정</h1>
-  <p class="lead">광고 매체에서 받은 숫자만 넣으면, 지표 계산은 코드가 정확하게 · 진단과 개선안은 클로이가.</p>
+  <div class="page-head"><div class="eyebrow">Results · 03</div><h1>성과 분석 · 예산 조정</h1><p class="lead">광고 매체에서 받은 숫자만 넣으면, 지표 계산은 코드가 정확하게 · 진단과 개선안은 클로이가.</p></div>
   <div class="card">
     <div class="row2" style="grid-template-columns:2fr 1fr 1fr 1fr">
       <label class="f"><span>캠페인명</span><input type="text" id="rpName" value="11월 신제품 런칭 캠페인"></label>
@@ -396,18 +568,17 @@ footer{color:var(--sub);font-size:12.5px;text-align:center;padding:20px}
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
       <button class="btn sm" id="rpAdd">+ 채널 추가</button>
       <span class="spacer"></span>
-      <button class="btn pri" id="rpRun">📊 성과 진단 받기</button>
+      <button class="btn pri" id="rpRun"><svg class="ic"><use href="#i-bar"/></svg> 성과 진단 받기</button>
     </div>
     <div class="muted" style="margin-top:6px;text-align:right">수작업 예상 약 1시간 30분 (엑셀 정리·계산·보고)</div>
   </div>
   <div class="card" style="margin:12px 0;padding:14px 18px"><div class="pipe" id="rpPipe"></div></div>
-  <div class="card" id="rpOut"><div class="empty"><div class="ico">📈</div>성과 숫자를 입력하고 <b>성과 진단 받기</b>를 눌러주세요.</div></div>
+  <div class="card" id="rpOut"><div class="empty"><div class="ico"><svg class="ic"><use href="#i-trend"/></svg></div>성과 숫자를 입력하고 <b>성과 진단 받기</b>를 눌러주세요.</div></div>
 </section>
 
 <!-- ================= HISTORY ================= -->
 <section class="page" id="p-hist">
-  <h1>승인·협업 이력</h1>
-  <p class="lead">대표님이 승인한 결과가 쌓이고, 다음 추천과 소재 기획에 다시 쓰여요.</p>
+  <div class="page-head"><div class="eyebrow">History</div><h1>승인·협업 이력</h1><p class="lead">대표님이 승인한 결과가 쌓이고, 다음 추천과 소재 기획에 다시 쓰여요.</p></div>
   <div class="grid g2">
     <div class="card"><h3>승인된 업무</h3><div id="hList"></div></div>
     <div class="card"><h3>인플루언서 협업 관리</h3>
@@ -415,15 +586,14 @@ footer{color:var(--sub);font-size:12.5px;text-align:center;padding:20px}
       <div id="hCollab"></div></div>
   </div>
   <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
-    <button class="btn sm" id="hExport">⬇ 이력 JSON 내보내기</button>
+    <button class="btn sm" id="hExport"><svg class="ic"><use href="#i-down"/></svg> 이력 JSON 내보내기</button>
     <button class="btn sm" id="hClear">이력 초기화</button>
   </div>
 </section>
 
 <!-- ================= SETTINGS ================= -->
 <section class="page" id="p-settings">
-  <h1>n8n 연결 설정</h1>
-  <p class="lead">Railway에 올린 n8n 주소를 넣으면 실제 AI 에이전트가 동작해요. 비워두면 데모 모드(미리 만든 예시 결과)로 동작합니다.</p>
+  <div class="page-head"><div class="eyebrow">Settings</div><h1>n8n 연결 설정</h1><p class="lead">Railway에 올린 n8n 주소를 넣으면 실제 AI 에이전트가 동작해요. 비워두면 데모 모드(미리 만든 예시 결과)로 동작합니다.</p></div>
   <div class="grid g2">
     <div class="card">
       <label class="f"><span>n8n 주소 <em>(Railway의 Public Domain)</em></span><input type="url" id="stUrl" placeholder="https://n8n-production-xxxx.up.railway.app"></label>
@@ -431,7 +601,7 @@ footer{color:var(--sub);font-size:12.5px;text-align:center;padding:20px}
         <select id="stMode">
           <option value="demo">데모 모드 — n8n 없이 예시 결과 (발표 백업용)</option>
           <option value="webhook-test">테스트 URL — n8n에서 'Execute workflow' 누른 상태</option>
-          <option value="webhook">운영 URL — 워크플로 Publish(Active) 상태 ✅ 발표용</option>
+          <option value="webhook">운영 URL — 워크플로 Publish(Active) 상태 <svg class="ic"><use href="#i-checkc"/></svg> 발표용</option>
         </select>
       </label>
       <label class="f"><span>팀 인플루언서 DB 시트 <em>(선택 · 구글 시트 '웹에 게시' CSV 주소)</em></span><input type="url" id="stSheet" placeholder="https://docs.google.com/spreadsheets/d/e/…/pub?output=csv"></label>
@@ -454,7 +624,16 @@ footer{color:var(--sub);font-size:12.5px;text-align:center;padding:20px}
   </div>
 </section>
 </main>
-<footer>Chloe MVP · 인공지능 비즈니스전략 3조 (김재환, 나선인, 양진석, 이상준) · 가상 샘플 인플루언서는 실존 인물이 아닙니다.</footer>
+<footer class="foot"><div class="wrap">
+  <div class="cols">
+    <div><a class="logo" data-go="home"><svg viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="9" fill="#4b3fd6"/><path d="M22.6 11.6a7.6 7.6 0 1 0 0 10.8" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/><circle cx="24.6" cy="17" r="2.2" fill="#b9b1ff"/></svg><span class="lt"><b>CHLOE</b><small>AI MARKETING</small></span></a>
+      <p style="margin:0;max-width:300px">전담 마케터 없는 소규모 브랜드 대표를 위한 AI 마케팅 파트너. 인플루언서 협업부터 광고 운영까지.</p></div>
+    <div><h4>SERVICES</h4><a data-go="perf">퍼포먼스 마케팅</a><a data-go="cre">광고 소재 스튜디오</a><a data-go="inf">인플루언서 마케팅</a><a data-go="rep">성과 분석</a></div>
+    <div><h4>WORKSPACE</h4><a data-go="hist">승인·협업 이력</a><a data-go="settings">n8n 연결 설정</a><a href="https://github.com/seoninna/seoninna.github.io/tree/main/chloe" target="_blank" rel="noopener">워크플로·프롬프트</a></div>
+    <div><h4>TEAM</h4><p style="margin:0">인공지능 비즈니스전략 3조<br>김재환 · 나선인 · 양진석 · 이상준</p></div>
+  </div>
+  <div class="copy">Chloe MVP · 가상 샘플 인플루언서는 실존 인물이 아닙니다.</div>
+</div></footer>
 <div class="toast" id="toast"></div>
 
 <script src="engine/influencer-engine.js"></script>
@@ -502,19 +681,19 @@ const PF = { name: '#prName', cat: '#prCat', price: '#prPrice', feat: '#prFeat',
 Object.entries(PF).forEach(([k, s]) => { $(s).value = product[k]; $(s).addEventListener('input', () => { product[k] = k === 'price' ? Number($(s).value) : $(s).value; store.set('product', product); renderProdHints(); }); });
 $$('#prAges input').forEach(i => { i.checked = product.ages.includes(i.value); i.addEventListener('change', () => { product.ages = $$('#prAges input:checked').map(x => x.value); store.set('product', product); renderProdHints(); }); });
 function renderProdHints() {
-  const h = `📦 <b>${esc(product.name)}</b> · ${esc(product.cat)} · ${won(product.price)}<br><span>${esc(product.target)}</span> <a href="#" data-go="home">수정</a>`;
+  const h = `<svg class="ic"><use href="#i-box"/></svg> <b>${esc(product.name)}</b> · ${esc(product.cat)} · ${won(product.price)}<br><span>${esc(product.target)}</span> <a href="#" data-go="home">수정</a>`;
   $('#perfProd').innerHTML = h; $('#creProd').innerHTML = h;
   $('#infProd').innerHTML = h + `<br><span class="muted">타겟 ${esc(product.gender)} · ${esc(product.ages.join(', ') || '연령 무관')} · 키워드 ${esc(product.keywords)}</span>`;
   if (!$('#ifYtq').value) $('#ifYtq').value = (String(product.keywords).split(',')[0].trim() || product.cat) + ' 리뷰';
-  $('#ifSrc').innerHTML = settings.sheet ? '🗂 팀 인플루언서 시트 연결됨 (설정 탭)' : '🗂 팀 인플루언서 시트 미연결 → 가상 샘플로 추천 · <a href="#" data-go="settings">시트 연결하기</a>';
+  $('#ifSrc').innerHTML = settings.sheet ? '<svg class="ic"><use href="#i-folder"/></svg> 팀 인플루언서 시트 연결됨 (설정 탭)' : '<svg class="ic"><use href="#i-folder"/></svg> 팀 인플루언서 시트 미연결 → 가상 샘플로 추천 · <a href="#" data-go="settings">시트 연결하기</a>';
   const assets = collabs.filter(c => c.assetOk);
   $('#pfAssets').innerHTML = assets.length
-    ? `🔗 연결 ② 사용 허가된 협업 콘텐츠 <b>${assets.length}건</b>을 광고 소재 기획에 반영해요: ${assets.map(a => esc(a.handle)).join(', ')}`
-    : '🔗 연결 ②: 이력 탭에서 인플루언서 콘텐츠 사용을 허가하면 광고 소재에 함께 반영돼요.';
+    ? `<svg class="ic"><use href="#i-link"/></svg> 연결 ② 사용 허가된 협업 콘텐츠 <b>${assets.length}건</b>을 광고 소재 기획에 반영해요: ${assets.map(a => esc(a.handle)).join(', ')}`
+    : '<svg class="ic"><use href="#i-link"/></svg> 연결 ②: 이력 탭에서 인플루언서 콘텐츠 사용을 허가하면 광고 소재에 함께 반영돼요.';
   const past = collabs.filter(c => c.result);
   $('#ifPast').innerHTML = past.length
-    ? `🔁 연결 ① 지난 협업 성과 <b>${past.length}건</b>을 추천 점수에 반영해요: ${past.map(c => esc(c.handle) + (c.result === 'good' ? ' 👍' : ' 👎')).join(', ')}`
-    : '🔁 연결 ①: 이력 탭에서 협업 성과를 기록하면 다음 추천에 반영돼요.';
+    ? `<svg class="ic"><use href="#i-repeat"/></svg> 연결 ① 지난 협업 성과 <b>${past.length}건</b>을 추천 점수에 반영해요: ${past.map(c => esc(c.handle) + (c.result === 'good' ? ' 👍' : ' 👎')).join(', ')}`
+    : '<svg class="ic"><use href="#i-repeat"/></svg> 연결 ①: 이력 탭에서 협업 성과를 기록하면 다음 추천에 반영돼요.';
 }
 
 /* ============================ n8n 호출 ============================ */
@@ -562,16 +741,16 @@ async function callChloe(type, body, pipeEl) {
 const current = {};
 function checksHtml(checks) {
   if (!checks || !checks.length) return '';
-  return `<div class="block"><h3>✅ 자동 검증 <span class="badge">n8n Code 노드</span></h3><div class="checks">${checks.map(c => `<div class="${c.ok ? 'ok' : 'no'}">${c.ok ? '✔' : '⚠'} ${esc(c.label)}</div>`).join('')}</div></div>`;
+  return `<div class="block"><h3><svg class="ic"><use href="#i-checkc"/></svg> 자동 검증 <span class="badge">n8n Code 노드</span></h3><div class="checks">${checks.map(c => `<div class="${c.ok ? 'ok' : 'no'}">${c.ok ? '✔' : '⚠'} ${esc(c.label)}</div>`).join('')}</div></div>`;
 }
 function headHtml(title, res) {
   const sec = (res.client_ms / 1000).toFixed(1);
-  return `<div class="res-head"><div><h2>${title}</h2><span class="timechip">⏱ 클로이 작업 <b>${sec}초</b> · ${res.source === 'n8n' ? '<span class="badge good">n8n 실시간</span>' : '<span class="badge warn">데모 결과</span>'}${res.revision ? ` <span class="badge coral">수정 ${res.revision}회 반영</span>` : ''}</span></div></div>`;
+  return `<div class="res-head"><div class="rh"><img class="chloe-av" src="assets/chloe-face.jpg" alt="클로이"><div><h2>${title}</h2><span class="timechip"><svg class="ic"><use href="#i-clock"/></svg> 클로이 작업 <b>${sec}초</b> · ${res.source === 'n8n' ? '<span class="badge good">n8n 실시간</span>' : '<span class="badge warn">데모 결과</span>'}${res.revision ? ` <span class="badge coral">수정 ${res.revision}회 반영</span>` : ''}</span></div></div></div>`;
 }
 function approveBar(type) {
   return `<div class="approve" id="ap-${type}">
-    <div class="who">대표 검토 단계<small>클로이는 초안까지만. 최종 판단은 대표님이 해요.</small></div>
-    <button class="btn" data-act="revise" data-type="${type}">✏ 수정 요청</button>
+    <img class="chloe-av" src="assets/chloe-face.jpg" alt="클로이"><div class="who">대표 검토 단계<small>클로이는 초안까지만. 최종 판단은 대표님이 해요.</small></div>
+    <button class="btn" data-act="revise" data-type="${type}"><svg class="ic"><use href="#i-pen"/></svg> 수정 요청</button>
     <button class="btn good" data-act="approve" data-type="${type}">✔ 승인하고 저장</button>
     <div class="revise" id="rv-${type}"><textarea placeholder="예: 광고 문구를 더 짧게, 20대 초반 대학생 타겟도 추가해줘"></textarea><button class="btn pri" data-act="send" data-type="${type}">보내기</button></div>
   </div>`;
@@ -606,7 +785,7 @@ async function runFlow(type, extra) {
   const F = FLOW[type]; const btn = $(F.btn);
   const body = { ...F.build(), ...(extra || {}) };
   btn.disabled = true; const label = btn.innerHTML; btn.innerHTML = '클로이가 작업 중…';
-  $(F.out).innerHTML = `<div class="empty"><div class="ico">🤖</div>${extra && extra.feedback ? '수정 요청을 반영하고 있어요…' : '클로이가 초안을 만들고 있어요…'}</div>`;
+  $(F.out).innerHTML = `<div class="empty working"><img class="chloe-av lg" src="assets/chloe-face.jpg" alt="클로이"><div><b>${extra && extra.feedback ? '수정 요청을 반영하고 있어요…' : '클로이가 초안을 만들고 있어요…'}</b></div><div class="muted">${type === 'creative' ? '이미지까지 만드는 중이라 20~60초 정도 걸려요' : '보통 10~30초 걸려요'}</div></div>`;
   try {
     const res = await callChloe(type, body, $(F.pipe));
     res.revision = extra?.revision || 0;
@@ -633,7 +812,7 @@ function approve(type) {
     });
     store.set('collabs', collabs);
   }
-  $('#ap-' + type).outerHTML = `<div class="approve"><div class="who">✔ 승인 완료 · 이력에 저장됐어요<small>수작업 예상 ${MANUAL[type]}분 → 클로이+대표 검토 ${totalMin}분 (${Math.round((1 - totalMin / MANUAL[type]) * 100)}% 단축)</small></div><button class="btn sm" data-go="hist">이력 보기</button></div>`;
+  $('#ap-' + type).outerHTML = `<div class="approve"><img class="chloe-av" src="assets/chloe-face.jpg" alt="클로이"><div class="who">✔ 승인 완료 · 이력에 저장됐어요<small>수작업 예상 ${MANUAL[type]}분 → 클로이+대표 검토 ${totalMin}분 (${Math.round((1 - totalMin / MANUAL[type]) * 100)}% 단축)</small></div><button class="btn sm" data-go="hist">이력 보기</button></div>`;
   updateStats(); toast('승인하고 저장했어요');
 }
 
@@ -646,19 +825,19 @@ function buildPerf() {
 }
 function renderPerf(res) {
   const d = res.data || {}; const ta = d.target_analysis || {};
-  let h = d.summary ? `<div class="sum">💡 ${esc(d.summary)}</div>` : '';
-  if (ta.primary_persona) h += `<div class="block"><h3>👥 타겟 분석</h3><div class="grid g2">
+  let h = d.summary ? `<div class="sum"><svg class="ic"><use href="#i-bulb"/></svg> ${esc(d.summary)}</div>` : '';
+  if (ta.primary_persona) h += `<div class="block"><h3><svg class="ic"><use href="#i-users"/></svg> 타겟 분석</h3><div class="grid g2">
     <div class="mini"><div class="t">핵심 타겟</div>${esc(ta.primary_persona)}</div>
     <div class="mini"><div class="t">확장 타겟</div>${esc(ta.secondary_persona)}</div>
     <div class="mini"><div class="t">타겟의 고민</div><ul class="clean">${(ta.pain_points || []).map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>
     <div class="mini"><div class="t">인사이트</div><ul class="clean">${(ta.insights || []).map(x => `<li>${esc(x)}</li>`).join('')}</ul></div></div></div>`;
-  if (d.trends) h += `<div class="block"><h3>📈 트렌드 인사이트 <span class="badge warn">가설</span></h3><div class="grid g3">${d.trends.map(t => `<div class="mini"><div class="t">${esc(t.title)}</div><span class="muted">${esc(t.description)}</span></div>`).join('')}</div></div>`;
-  if (d.budget_plan) h += `<div class="block"><h3>💰 예산 배분</h3>${d.budget_plan.map(b => `<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;gap:10px"><b>${esc(b.channel)}</b><span>${won(b.amount)} · ${b.ratio}%</span></div><div class="bar"><i style="width:${Math.min(100, b.ratio)}%"></i></div><div class="muted">${esc(b.reason)}</div></div>`).join('')}</div>`;
-  if (d.ad_copies) h += `<div class="block"><h3>✍ 광고 소재</h3><div class="grid g2">${d.ad_copies.map(a => {
+  if (d.trends) h += `<div class="block"><h3><svg class="ic"><use href="#i-trend"/></svg> 트렌드 인사이트 <span class="badge warn">가설</span></h3><div class="grid g3">${d.trends.map(t => `<div class="mini"><div class="t">${esc(t.title)}</div><span class="muted">${esc(t.description)}</span></div>`).join('')}</div></div>`;
+  if (d.budget_plan) h += `<div class="block"><h3><svg class="ic"><use href="#i-wallet"/></svg> 예산 배분</h3>${d.budget_plan.map(b => `<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;gap:10px"><b>${esc(b.channel)}</b><span>${won(b.amount)} · ${b.ratio}%</span></div><div class="bar"><i style="width:${Math.min(100, b.ratio)}%"></i></div><div class="muted">${esc(b.reason)}</div></div>`).join('')}</div>`;
+  if (d.ad_copies) h += `<div class="block"><h3><svg class="ic"><use href="#i-pen"/></svg> 광고 소재</h3><div class="grid g2">${d.ad_copies.map(a => {
     const txt = `[${a.channel}]\n${a.headline}\n${a.body}\nCTA: ${a.cta}`;
-    return `<div class="adcard"><div class="img">🖼 ${esc(a.image_prompt)}</div><div class="bd"><span class="badge">${esc(a.channel)}</span><div class="hl">${esc(a.headline)}</div><div>${esc(a.body)}</div><span class="cta">${esc(a.cta)}</span><div style="margin-top:10px"><button class="btn sm" data-act="copy" data-text="${encodeURIComponent(txt)}">복사</button></div></div></div>`; }).join('')}</div></div>`;
-  if (d.kpi_rules) h += `<div class="block"><h3>🎛 KPI · 운영 규칙</h3><div class="tscroll"><table><tr><th>지표</th><th>목표</th><th>운영 규칙</th></tr>${d.kpi_rules.map(k => `<tr><td><b>${esc(k.metric)}</b></td><td>${esc(k.target)}</td><td>${esc(k.rule)}</td></tr>`).join('')}</table></div></div>`;
-  if (d.checklist) h += `<div class="block"><h3>🛡 표현·규격 검수</h3><ul class="clean">${d.checklist.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>`;
+    return `<div class="adcard"><div class="img"><svg class="ic"><use href="#i-image"/></svg> ${esc(a.image_prompt)}</div><div class="bd"><span class="badge">${esc(a.channel)}</span><div class="hl">${esc(a.headline)}</div><div>${esc(a.body)}</div><span class="cta">${esc(a.cta)}</span><div style="margin-top:10px"><button class="btn sm" data-act="copy" data-text="${encodeURIComponent(txt)}">복사</button></div></div></div>`; }).join('')}</div></div>`;
+  if (d.kpi_rules) h += `<div class="block"><h3><svg class="ic"><use href="#i-sliders"/></svg> KPI · 운영 규칙</h3><div class="tscroll"><table><tr><th>지표</th><th>목표</th><th>운영 규칙</th></tr>${d.kpi_rules.map(k => `<tr><td><b>${esc(k.metric)}</b></td><td>${esc(k.target)}</td><td>${esc(k.rule)}</td></tr>`).join('')}</table></div></div>`;
+  if (d.checklist) h += `<div class="block"><h3><svg class="ic"><use href="#i-shield"/></svg> 표현·규격 검수</h3><ul class="clean">${d.checklist.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>`;
   return h + rawHtml(d);
 }
 
@@ -666,7 +845,7 @@ function renderPerf(res) {
 // 추천 엔진은 engine/influencer-engine.js (n8n Code 노드와 같은 코드)
 const TIER_COLOR = { mega: '#2a2170', macro: '#5b4fe0', mid: '#ff8a7a', micro: '#14a26a' };
 const TIER_RANGE = Object.fromEntries(ChloeEngine.TIERS.map(t => [t.key, t.range]));
-const PF_ICON = { '인스타그램': '📸', '틱톡': '🎵', '유튜브': '▶️' };
+const PF_ICON = { '인스타그램': '<svg class="ic"><use href="#i-insta"/></svg>', '틱톡': '<svg class="ic"><use href="#i-music"/></svg>', '유튜브': '<svg class="ic"><use href="#i-play"/></svg>' };
 const SRC = { sheet: ['팀 시트', 'good'], youtube: ['YouTube API', 'good'], sample: ['가상 샘플', 'warn'] };
 const AV = ['#5b4fe0', '#ff6f61', '#14a26a', '#d98a00', '#3a86ff', '#2a2170', '#e0475a', '#0b8a8a'];
 const BD = [['content', '콘텐츠', 30], ['audience', '오디언스', 25], ['engagement', '참여율', 20], ['cost', '비용효율', 15], ['trust', '신뢰도', 10]];
@@ -695,28 +874,28 @@ function tierBadge(c) { return `<span class="badge" style="background:${TIER_COL
 function srcBadge(c) { const s = SRC[c.source] || ['?', '']; return `<span class="badge ${s[1]}">${s[0]}</span>`; }
 function renderInf(res) {
   const d = res.data || {}, e = res.engine || { tier_mix: { allocations: [] }, portfolio: [], by_platform: {} };
-  let h = d.summary ? `<div class="sum">💡 ${esc(d.summary)}</div>` : '';
-  if (res.data_notes && res.data_notes.length) h += `<div class="hint" style="margin-top:10px">🗂 ${res.data_notes.map(esc).join(' · ')}</div>`;
+  let h = d.summary ? `<div class="sum"><svg class="ic"><use href="#i-bulb"/></svg> ${esc(d.summary)}</div>` : '';
+  if (res.data_notes && res.data_notes.length) h += `<div class="hint" style="margin-top:10px"><svg class="ic"><use href="#i-folder"/></svg> ${res.data_notes.map(esc).join(' · ')}</div>`;
   // 티어 전략
   const al = e.tier_mix.allocations;
-  h += `<div class="block"><h3>💰 예산 티어 전략 <span class="badge">총 ${won(e.tier_mix.budget)}</span></h3>
+  h += `<div class="block"><h3><svg class="ic"><use href="#i-wallet"/></svg> 예산 티어 전략 <span class="badge">총 ${won(e.tier_mix.budget)}</span></h3>
     <div class="stack big">${al.map(a => `<i style="width:${a.ratio}%;background:${TIER_COLOR[a.tier]}">${a.ratio >= 12 ? `${a.tier_label} ${a.ratio}%` : ''}</i>`).join('')}</div>
     <div class="grid g4" style="margin-top:10px">${al.map(a => `<div class="mini"><div class="t"><span class="tdot" style="background:${TIER_COLOR[a.tier]}"></span>${a.tier_label} <span class="muted">${TIER_RANGE[a.tier]}</span></div>
       <div>${won(a.amount)} 배정</div><div class="muted">${a.count}명 선정 · ${won(a.used)} 사용${a.note ? `<br>⚠ ${esc(a.note)}` : ''}</div></div>`).join('')}</div>
     ${d.tier_strategy ? `<div class="hint" style="margin-top:10px">${esc(d.tier_strategy)}</div>` : ''}
     <div class="muted" style="margin-top:6px">구간: ${esc(e.tier_mix.band)}${e.tier_mix.adjustment ? ' · ' + esc(e.tier_mix.adjustment) : ''} · 남는 예산은 아래 티어로 이월돼요.</div></div>`;
   // 추천 조합
-  h += `<div class="block"><h3>🏅 예산 맞춤 추천 조합 <span class="badge">${e.portfolio.length}명 · ${won(e.portfolio_total)}</span></h3>`;
+  h += `<div class="block"><h3><svg class="ic"><use href="#i-award"/></svg> 예산 맞춤 추천 조합 <span class="badge">${e.portfolio.length}명 · ${won(e.portfolio_total)}</span></h3>`;
   h += e.portfolio.length ? e.portfolio.map((c, i) => `<div class="pf">
       <div class="avatar" style="background:${AV[i % AV.length]}">${esc((c.name || c.handle).slice(0, 1))}</div>
       <div><b>${i + 1}. ${esc(c.name)}</b> <span class="muted">${c.url ? `<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.handle)}</a>` : esc(c.handle)}</span>
         <div style="margin:4px 0;display:flex;gap:4px;flex-wrap:wrap"><span class="badge">${PF_ICON[c.platform]} ${esc(c.platform)}</span>${tierBadge(c)}${srcBadge(c)}</div>
         <div class="meta">${fol(c)} ${num(c.followers)} · 참여율 ${c.engagement_rate ?? '-'}% · 예상 단가 ${won(c.est_cost)}${c.cost_estimated ? ' <span class="badge warn">추정</span>' : ''}</div>
-        ${c.role ? `<div style="margin-top:6px;font-weight:700">🎯 ${esc(c.role)}</div>` : ''}
+        ${c.role ? `<div style="margin-top:6px;font-weight:700"><svg class="ic"><use href="#i-target"/></svg> ${esc(c.role)}</div>` : ''}
         <div style="margin-top:4px">${esc(c.ai_reason || c.reasons.join(', '))}</div>
         ${(c.ai_risk || c.risks.join(', ')) ? `<div class="muted" style="margin-top:4px">⚠ ${esc(c.ai_risk || c.risks.join(', '))}</div>` : ''}
         ${c.suggested_offer ? `<div style="margin-top:6px"><span class="badge coral">제안 조건</span> ${esc(c.suggested_offer)}</div>` : ''}
-        ${c.content_idea ? `<div class="muted" style="margin-top:4px">💡 ${esc(c.content_idea)}</div>` : ''}
+        ${c.content_idea ? `<div class="muted" style="margin-top:4px"><svg class="ic"><use href="#i-bulb"/></svg> ${esc(c.content_idea)}</div>` : ''}
       </div>
       <div class="score"><b>${c.fit_score}</b><span>적합도</span>${bdBars(c.breakdown)}</div></div>`).join('')
     : '<div class="hint">조건에 맞는 후보가 없어요. 예산을 늘리거나 플랫폼·키워드를 바꿔보세요.</div>';
@@ -724,7 +903,7 @@ function renderInf(res) {
   // 플랫폼별 랭킹
   const pfs = Object.keys(e.by_platform);
   const inPf = new Set(e.portfolio.map(c => c.platform + c.handle));
-  h += `<div class="block"><h3>📊 플랫폼별 후보 랭킹</h3><div class="ptabs">${pfs.map((p, i) => `<button class="${i ? '' : 'on'}" data-ptab="${esc(p)}">${PF_ICON[p]} ${esc(p)} <span>${e.by_platform[p].length}</span></button>`).join('')}</div>
+  h += `<div class="block"><h3><svg class="ic"><use href="#i-bar"/></svg> 플랫폼별 후보 랭킹</h3><div class="ptabs">${pfs.map((p, i) => `<button class="${i ? '' : 'on'}" data-ptab="${esc(p)}">${PF_ICON[p]} ${esc(p)} <span>${e.by_platform[p].length}</span></button>`).join('')}</div>
     ${pfs.map((p, i) => `<div data-ppanel="${esc(p)}" style="${i ? 'display:none' : ''}">
       ${d.platform_tips && d.platform_tips[p] ? `<div class="hint" style="margin-bottom:8px">${PF_ICON[p]} ${esc(d.platform_tips[p])}</div>` : ''}
       <div class="tscroll"><table><tr><th>#</th><th>인플루언서</th><th>티어</th><th class="num">${p === '유튜브' ? '구독자' : '팔로워'}</th><th class="num">참여율</th><th class="num">예상 단가</th><th>적합도</th><th>출처</th></tr>
@@ -732,18 +911,18 @@ function renderInf(res) {
         <td>${tierBadge(c)}</td><td class="num">${num(c.followers)}</td><td class="num">${c.engagement_rate ?? '-'}%</td><td class="num">${won(c.est_cost)}${c.cost_estimated ? '*' : ''}</td>
         <td><b>${c.fit_score}</b><span class="fitbar"><b style="width:${c.fit_score}%"></b></span></td><td>${srcBadge(c)}</td></tr>`).join('') || '<tr><td colspan="8" class="muted">후보 없음</td></tr>'}</table></div></div>`).join('')}
     <div class="muted" style="margin-top:6px">* 단가 미입력 → 팔로워 기준 추정 · 참여율: 인스타·틱톡 (좋아요+댓글)/팔로워, 유튜브 평균 조회수/구독자 · 적합도 = 콘텐츠30 + 오디언스25 + 참여율20 + 비용효율15 + 신뢰도10 ± 협업이력</div></div>`;
-  if (d.proposal_dm) h += `<div class="block"><h3>💬 첫 제안 DM <span class="badge warn">대표님이 직접 발송</span></h3><div class="muted" style="margin-bottom:6px">받는 사람: ${esc(d.proposal_dm.to)}</div><div class="dm">${esc(d.proposal_dm.message)}</div><div style="margin-top:8px"><button class="btn sm" data-act="copy" data-text="${encodeURIComponent(d.proposal_dm.message || '')}">DM 복사</button></div></div>`;
+  if (d.proposal_dm) h += `<div class="block"><h3><svg class="ic"><use href="#i-message"/></svg> 첫 제안 DM <span class="badge warn">대표님이 직접 발송</span></h3><div class="muted" style="margin-bottom:6px">받는 사람: ${esc(d.proposal_dm.to)}</div><div class="dm">${esc(d.proposal_dm.message)}</div><div style="margin-top:8px"><button class="btn sm" data-act="copy" data-text="${encodeURIComponent(d.proposal_dm.message || '')}">DM 복사</button></div></div>`;
   if (d.contract_draft) {
     const c = d.contract_draft; const txt = c.title + '\n\n' + (c.clauses || []).map(x => x.title + '\n' + x.content).join('\n\n') + '\n\n※ ' + (c.note || '');
-    h += `<div class="block"><h3>📄 계약서 초안 <span class="badge warn">초안 · 법률 자문 아님</span></h3><div class="contract"><h4>${esc(c.title)}</h4>${(c.clauses || []).map(x => `<p><b>${esc(x.title)}</b><br>${esc(x.content)}</p>`).join('')}<p class="muted">※ ${esc(c.note)}</p></div>
-      <div style="margin-top:8px;display:flex;gap:6px"><button class="btn sm" data-act="copy" data-text="${encodeURIComponent(txt)}">복사</button><button class="btn sm" data-act="download" data-name="계약서초안.txt" data-text="${encodeURIComponent(txt)}">⬇ .txt 다운로드</button></div></div>`;
+    h += `<div class="block"><h3><svg class="ic"><use href="#i-file"/></svg> 계약서 초안 <span class="badge warn">초안 · 법률 자문 아님</span></h3><div class="contract"><h4>${esc(c.title)}</h4>${(c.clauses || []).map(x => `<p><b>${esc(x.title)}</b><br>${esc(x.content)}</p>`).join('')}<p class="muted">※ ${esc(c.note)}</p></div>
+      <div style="margin-top:8px;display:flex;gap:6px"><button class="btn sm" data-act="copy" data-text="${encodeURIComponent(txt)}">복사</button><button class="btn sm" data-act="download" data-name="계약서초안.txt" data-text="${encodeURIComponent(txt)}"><svg class="ic"><use href="#i-down"/></svg> .txt 다운로드</button></div></div>`;
   }
   if (d.content_brief) { const b = d.content_brief;
-    h += `<div class="block"><h3>🎬 콘텐츠 브리프</h3><div class="grid g3">
+    h += `<div class="block"><h3><svg class="ic"><use href="#i-film"/></svg> 콘텐츠 브리프</h3><div class="grid g3">
       <div class="mini"><div class="t">핵심 메시지</div><ul class="clean">${(b.key_messages || []).map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>
       <div class="mini"><div class="t">✔ 꼭 해주세요</div><ul class="clean">${(b.dos || []).map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>
       <div class="mini"><div class="t">✖ 피해주세요</div><ul class="clean">${(b.donts || []).map(x => `<li>${esc(x)}</li>`).join('')}</ul></div></div>
-      <div class="hint" style="margin-top:10px">🗓 ${esc(b.schedule)}</div></div>`; }
+      <div class="hint" style="margin-top:10px"><svg class="ic"><use href="#i-cal"/></svg> ${esc(b.schedule)}</div></div>`; }
   return h + rawHtml(d);
 }
 $('#ifOut').addEventListener('click', e => {
@@ -753,7 +932,21 @@ $('#ifOut').addEventListener('click', e => {
 });
 function downloadText(name, text) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' })); a.download = name; a.click(); }
 
-/* ============================ 🎨 소재 스튜디오 ============================ */
+/* ============================ <svg class="ic"><use href="#i-palette"/></svg> 소재 스튜디오 ============================ */
+// 무료 이미지 생성 (API 키 없음). 서비스 주소가 바뀌면 여기만 수정
+const FREE_IMAGE_URL = 'https://image.pollinations.ai/prompt/{prompt}?width={width}&height={height}&seed={seed}&nologo=true&model=flux';
+const CAT_EN = { '뷰티': 'skincare and beauty', '푸드': 'food and wellness', '패션': 'fashion', '리빙': 'home and living', '테크': 'consumer tech' };
+async function freeImage(prompt, w, h) {
+  const url = FREE_IMAGE_URL.replace('{prompt}', encodeURIComponent(prompt)).replace('{width}', w).replace('{height}', h).replace('{seed}', Math.floor(Math.random() * 1e6));
+  const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 90000);
+  try {
+    const r = await fetch(url, { signal: ctl.signal });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const blob = await r.blob();
+    if (!/^image\//.test(blob.type) || blob.size < 2000) throw new Error('이미지가 아님');
+    return await new Promise((ok, no) => { const fr = new FileReader(); fr.onload = () => ok(fr.result); fr.onerror = no; fr.readAsDataURL(blob); });
+  } catch (e) { throw new Error(e.name === 'AbortError' ? '시간 초과' : e.message); } finally { clearTimeout(t); }
+}
 const CR_FORMATS = {
   instagram_feed: { label: '인스타그램 피드', ratio: '1:1', w: 1080, h: 1080, hl: 25, bl: 125, visual: true },
   instagram_story: { label: '인스타 스토리·릴스', ratio: '9:16', w: 1080, h: 1920, hl: 20, bl: 40, visual: true },
@@ -765,7 +958,7 @@ const CR_FORMATS = {
 const CR_EX = ['겨울 출근길, 사무실 건조함에 지친 직장인에게 공감하는 광고를 만들어줘',
   '성분을 꼼꼼히 따지는 20대를 위해 핵심 성분과 근거를 강조한 광고',
   '자기 전 1분 루틴으로 다음 날 아침 피부가 달라지는 감성 광고'];
-$('#crEx').innerHTML = CR_EX.map((t, i) => `<label data-crex="${i}">💡 ${esc(t.slice(0, 16))}…</label>`).join('');
+$('#crEx').innerHTML = CR_EX.map((t, i) => `<label data-crex="${i}"><svg class="ic"><use href="#i-bulb"/></svg> ${esc(t.slice(0, 16))}…</label>`).join('');
 $('#crEx').addEventListener('click', e => { const l = e.target.closest('[data-crex]'); if (l) $('#crPrompt').value = CR_EX[l.dataset.crex]; });
 $('#crPrompt').value = CR_EX[0];
 $('#crFmt').innerHTML = Object.entries(CR_FORMATS).map(([k, f]) => `<label><input type="checkbox" value="${k}" ${['instagram_feed', 'instagram_story', 'naver_search'].includes(k) ? 'checked' : ''}>${f.label} <span class="muted">${f.ratio}</span></label>`).join('');
@@ -801,11 +994,11 @@ let crState = { res: null, sel: {}, urls: {} };
 function renderCre(res) {
   crState = { res, sel: {}, urls: {} };
   const d = res.data || {};
-  let h = d.concept ? `<div class="sum">💡 ${esc(d.concept)}${d.key_message ? ` — ${esc(d.key_message)}` : ''}</div>` : '';
-  if (res.source === 'demo') h += `<div class="hint" style="margin-top:10px">데모 모드는 AI 이미지 대신 기본 배경을 써요. n8n에 연결하면 OpenAI 이미지 모델이 매체별 시안 이미지를 만들어요.</div>`;
-  if (res.image_errors && res.image_errors.length) h += `<div class="err" style="margin-top:10px"><b>이미지 생성 실패</b> (카피와 기본 배경은 정상)<br>${res.image_errors.map(esc).join('<br>')}</div>`;
+  let h = d.concept ? `<div class="sum"><svg class="ic"><use href="#i-bulb"/></svg> ${esc(d.concept)}${d.key_message ? ` — ${esc(d.key_message)}` : ''}</div>` : '';
+  if (res.source === 'demo') h += `<div class="hint" style="margin-top:10px">데모 모드: 카피는 예시 템플릿이고, 이미지는 무료 AI 이미지 서비스(Pollinations)로 실제 생성해요. n8n에 연결하면 카피도 AI가 대표님 프롬프트에 맞춰 써요.</div>`;
+  if (res.image_errors && res.image_errors.length) h += `<div class="err" style="margin-top:10px"><b>일부 이미지 생성 실패</b> (카피와 기본 배경은 정상)<br>${res.image_errors.join('<br>')}</div>`;
   h += `<div class="block">${(d.creatives || []).map((c, i) => creativeCard(i)).join('')}</div>`;
-  if (d.checklist) h += `<div class="block"><h3>🛡 표현·규격 검수</h3><ul class="clean">${d.checklist.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>`;
+  if (d.checklist) h += `<div class="block"><h3><svg class="ic"><use href="#i-shield"/></svg> 표현·규격 검수</h3><ul class="clean">${d.checklist.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>`;
   return h + rawHtml(d);
 }
 function creativeCard(i) {
@@ -813,19 +1006,19 @@ function creativeCard(i) {
   const brand = esc(product.name);
   let mock;
   if (!F.visual) mock = `<div class="mk-naver"><div class="ad">광고 · ${brand}</div><div class="tt">${esc(v.headline)}</div><div class="url">smartstore.naver.com</div><div>${esc(v.body)}</div></div>`;
-  else if (c.format === 'instagram_feed') mock = `<div class="mk mk-feed"><div class="mk-top"><span class="mk-av"></span><b>${brand}</b><span class="muted">· 광고</span></div><img id="crimg-${i}" alt="${F.label} 시안"><div class="mk-bot">♡ 💬 ✈︎<div style="margin-top:4px"><b>${brand}</b> ${esc(v.body)}</div><div style="color:var(--pri)">${(c.hashtags || []).map(esc).join(' ')}</div></div></div>`;
+  else if (c.format === 'instagram_feed') mock = `<div class="mk mk-feed"><div class="mk-top"><span class="mk-av"></span><b>${brand}</b><span class="muted">· 광고</span></div><img id="crimg-${i}" alt="${F.label} 시안"><div class="mk-bot">♡ <svg class="ic"><use href="#i-message"/></svg> ✈︎<div style="margin-top:4px"><b>${brand}</b> ${esc(v.body)}</div><div style="color:var(--pri)">${(c.hashtags || []).map(esc).join(' ')}</div></div></div>`;
   else if (c.format === 'kakao_bizboard') mock = `<div class="mk mk-kakao"><div class="row" style="width:70%"></div><div class="row" style="width:45%"></div><img id="crimg-${i}" alt="${F.label} 시안"><div class="row" style="width:60%"></div><div class="row" style="width:35%"></div></div>`;
-  else mock = `<div class="mk mk-phone"><img id="crimg-${i}" alt="${F.label} 시안"><div class="mk-side">♥<br>💬<br>↗</div></div>`;
+  else mock = `<div class="mk mk-phone"><img id="crimg-${i}" alt="${F.label} 시안"><div class="mk-side">♥<br><svg class="ic"><use href="#i-message"/></svg><br>↗</div></div>`;
   const vars = (c.variants || []).map((x, j) => `<div class="var ${j === sel ? 'on' : ''}" data-crv="${i}:${j}">
     <div class="muted">${'ABC'[j] || j + 1}안 · ${esc(x.angle || '')}</div>
     <div class="hl">${esc(x.headline)} <span class="len ${clen(x.headline) > F.hl ? 'over' : ''}">${clen(x.headline)}/${F.hl}자</span></div>
     <div>${esc(x.body)} <span class="len ${clen(x.body) > F.bl ? 'over' : ''}">${clen(x.body)}/${F.bl}자</span></div>
     <div class="muted">CTA: ${esc(x.cta)}</div></div>`).join('');
   const txt = `[${F.label}]\n${v.headline}\n${v.body}\nCTA: ${v.cta}${c.hashtags ? '\n' + c.hashtags.join(' ') : ''}`;
-  return `<div class="crc" id="crc-${i}"><div style="margin-bottom:10px"><b>${F.label}</b> <span class="badge">${F.ratio}</span> ${c.image ? '<span class="badge good">AI 이미지</span>' : F.visual ? '<span class="badge warn">기본 배경</span>' : ''}</div>
+  return `<div class="crc" id="crc-${i}"><div style="margin-bottom:10px"><b>${F.label}</b> <span class="badge">${F.ratio}</span> ${c.image ? `<span class="badge good">${c.image_source === 'free' ? '무료 AI 이미지' : 'AI 이미지'}</span>` : F.visual ? '<span class="badge warn">기본 배경</span>' : ''}</div>
     <div class="crc-grid"><div>${mock}</div><div>${vars}
-      <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm" data-act="copy" data-text="${encodeURIComponent(txt)}">선택안 복사</button>${F.visual ? `<button class="btn sm" data-crdl="${i}">⬇ 시안 이미지</button>` : ''}</div>
-      ${c.visual && c.visual.description_ko ? `<div class="muted" style="margin-top:8px">🖼 ${esc(c.visual.description_ko)}</div>` : ''}
+      <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm" data-act="copy" data-text="${encodeURIComponent(txt)}">선택안 복사</button>${F.visual ? `<button class="btn sm" data-crdl="${i}"><svg class="ic"><use href="#i-down"/></svg> 시안 이미지</button>` : ''}</div>
+      ${c.visual && c.visual.description_ko ? `<div class="muted" style="margin-top:8px"><svg class="ic"><use href="#i-image"/></svg> ${esc(c.visual.description_ko)}</div>` : ''}
     </div></div></div>`;
 }
 async function drawCreative(i) {
@@ -933,18 +1126,18 @@ function renderRep(res) {
   const d = res.data || {}, m = res.metrics || { channels: [], totals: {} };
   const st = Object.fromEntries((d.diagnosis || []).map(x => [x.channel, x.status]));
   const lab = { good: ['good', '좋음'], warn: ['warn', '주의'], bad: ['bad', '개선 필요'] };
-  let h = d.summary ? `<div class="sum">💡 ${esc(d.summary)}</div>` : '';
+  let h = d.summary ? `<div class="sum"><svg class="ic"><use href="#i-bulb"/></svg> ${esc(d.summary)}</div>` : '';
   const T = m.totals;
   h += `<div class="grid g4 block">${[['총 광고비', won(T.spend)], ['총 매출', won(T.revenue)], ['ROAS', (T.roas ?? '-') + '%'], ['CPA', won(T.cpa)]].map(([k, v]) => `<div class="mini"><div class="muted">${k}</div><div style="font-size:20px;font-weight:800">${v}</div></div>`).join('')}</div>`;
-  h += `<div class="block"><h3>🧮 채널별 지표 <span class="badge">코드 계산 · 오류 0</span></h3><div class="tscroll"><table><tr><th>채널</th><th class="num">광고비</th><th class="num">CTR</th><th class="num">CVR</th><th class="num">CPC</th><th class="num">CPA</th><th class="num">ROAS</th><th>상태</th></tr>
+  h += `<div class="block"><h3><svg class="ic"><use href="#i-calc"/></svg> 채널별 지표 <span class="badge">코드 계산 · 오류 0</span></h3><div class="tscroll"><table><tr><th>채널</th><th class="num">광고비</th><th class="num">CTR</th><th class="num">CVR</th><th class="num">CPC</th><th class="num">CPA</th><th class="num">ROAS</th><th>상태</th></tr>
     ${m.channels.map(c => { const s = lab[st[c.name]]; return `<tr><td><b>${esc(c.name)}</b>${c.enough_data ? '' : '<br><span class="badge warn">데이터 부족</span>'}</td><td class="num">${won(c.spend)}</td><td class="num">${c.ctr ?? '-'}%</td><td class="num">${c.cvr ?? '-'}%</td><td class="num">${won(c.cpc)}</td><td class="num">${won(c.cpa)}</td><td class="num"><b>${c.roas ?? '-'}%</b></td><td>${s ? `<span class="badge ${s[0]}">${s[1]}</span>` : ''}</td></tr>`; }).join('')}</table></div>
     <div class="muted" style="margin-top:6px">CTR=클릭/노출 · CVR=구매/클릭 · CPC=광고비/클릭 · CPA=광고비/구매 · ROAS=매출/광고비</div></div>`;
-  if (d.diagnosis) h += `<div class="block"><h3>🩺 진단</h3>${d.diagnosis.map(x => `<div class="mini" style="margin-bottom:8px"><span class="badge ${(lab[x.status] || ['', ''])[0]}">${esc(x.channel)}</span> ${esc(x.finding)}</div>`).join('')}</div>`;
-  if (d.hypotheses) h += `<div class="block"><h3>🧪 개선 가설 · 다음 실험</h3><div class="grid g3">${d.hypotheses.map(x => `<div class="mini"><div class="t">${esc(x.hypothesis)}</div><div>▶ ${esc(x.action)}</div><div class="muted" style="margin-top:4px">기대 효과: ${esc(x.expected_effect)}</div></div>`).join('')}</div></div>`;
-  if (d.budget_adjustments) h += `<div class="block"><h3>💸 다음 기간 예산 조정안</h3><div class="tscroll"><table><tr><th>채널</th><th class="num">현재</th><th class="num">제안</th><th class="num">변경</th><th>실행</th><th>이유</th></tr>
+  if (d.diagnosis) h += `<div class="block"><h3><svg class="ic"><use href="#i-activity"/></svg> 진단</h3>${d.diagnosis.map(x => `<div class="mini" style="margin-bottom:8px"><span class="badge ${(lab[x.status] || ['', ''])[0]}">${esc(x.channel)}</span> ${esc(x.finding)}</div>`).join('')}</div>`;
+  if (d.hypotheses) h += `<div class="block"><h3><svg class="ic"><use href="#i-flask"/></svg> 개선 가설 · 다음 실험</h3><div class="grid g3">${d.hypotheses.map(x => `<div class="mini"><div class="t">${esc(x.hypothesis)}</div><div>▶ ${esc(x.action)}</div><div class="muted" style="margin-top:4px">기대 효과: ${esc(x.expected_effect)}</div></div>`).join('')}</div></div>`;
+  if (d.budget_adjustments) h += `<div class="block"><h3><svg class="ic"><use href="#i-wallet"/></svg> 다음 기간 예산 조정안</h3><div class="tscroll"><table><tr><th>채널</th><th class="num">현재</th><th class="num">제안</th><th class="num">변경</th><th>실행</th><th>이유</th></tr>
     ${d.budget_adjustments.map(a => `<tr><td><b>${esc(a.channel)}</b></td><td class="num">${won(a.current)}</td><td class="num">${won(a.proposed)}</td><td class="num">${a.change_pct === null || a.change_pct === undefined ? '-' : (a.change_pct > 0 ? '+' : '') + a.change_pct + '%'}</td><td>${a.needs_approval ? `<span class="badge bad">대표 승인 필요</span><div class="muted">${esc(a.approval_reason)}</div>` : '<span class="badge good">자동 실행 범위</span>'}</td><td>${esc(a.reason)}</td></tr>`).join('')}</table></div></div>`;
-  if (d.next_actions) h += `<div class="block"><h3>📌 이번 주 할 일</h3><ul class="clean">${d.next_actions.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>`;
-  if (d.influencer_feedback) h += `<div class="block"><div class="hint">🔁 <b>연결 ① 인플루언서 추천에 반영:</b> ${esc(d.influencer_feedback)}</div></div>`;
+  if (d.next_actions) h += `<div class="block"><h3><svg class="ic"><use href="#i-pin"/></svg> 이번 주 할 일</h3><ul class="clean">${d.next_actions.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>`;
+  if (d.influencer_feedback) h += `<div class="block"><div class="hint"><svg class="ic"><use href="#i-repeat"/></svg> <b>연결 ① 인플루언서 추천에 반영:</b> ${esc(d.influencer_feedback)}</div></div>`;
   return h + rawHtml(d);
 }
 
@@ -1016,7 +1209,7 @@ const MOCK = {
         note: '본 문서는 표준 양식 기반 초안이며 법률 자문이 아닙니다. 서명 전 조건을 대표님이 최종 확인해주세요.' } : null,
       content_brief: { key_messages: String(b.features).split(',').slice(0, 3).map(x => x.trim()).filter(Boolean), dos: ['제형·사용 장면 클로즈업', '본인의 실제 고민과 사용 루틴', '"#광고" 표기를 첫 줄에'], donts: ['효능 단정 표현 (예: "트러블이 사라진다")', '타사 제품 비하 비교', '미승인 할인 정보 언급'], schedule: '제품 발송(D) → 초안 제출(D+7) → 피드백(D+9) → 게시(D+12) → 성과 공유(D+19)' } } };
   },
-  creative(b) {
+  async creative(b) {
     const n = b.product, feats = String(b.features).split(/[,·]/).map(s => s.trim()).filter(Boolean);
     const f1 = feats[0] || n, f2 = feats[1] || f1, f3 = feats[2] || f2;
     const hook = String(b.prompt).split(/[,.\n]/)[0].replace(/(을|를)?\s*(만들어줘|만들어 줘|광고)$/, '').trim() || n;
@@ -1031,7 +1224,19 @@ const MOCK = {
       visual: F.visual ? { description_ko: `"${hook}" 분위기의 ${b.category} 광고 사진, 카피용 여백`, image_prompt_en: 'soft natural light lifestyle scene, empty space for copy', text_color: 'dark' } : null,
       hashtags: ['#' + n.replace(/\s/g, ''), '#' + b.category, ...String(product.keywords || '').split(',').map(s => s.trim()).filter(Boolean).slice(0, 2).map(s => '#' + s)],
       image: null }; });
-    return { ok: true, type: 'creative', checks: [{ ok: true, label: '모든 카피가 매체별 글자 수 제한 이내' }, { ok: true, label: '과장·금지 표현 없음' }], image_errors: [],
+    const image_errors = [], checks = [{ ok: true, label: '모든 카피가 매체별 글자 수 제한 이내' }, { ok: true, label: '과장·금지 표현 없음' }];
+    if (b.make_image) {
+      const vis = creatives.filter(c => CR_FORMATS[c.format].visual);
+      await Promise.all(vis.map(async c => {
+        const [w, h] = c.format === 'instagram_feed' ? [1024, 1024] : c.format === 'kakao_bizboard' ? [1536, 640] : [864, 1536];
+        const prompt = `Advertising lifestyle photograph for a ${CAT_EN[b.category] || 'lifestyle'} brand. Mood: ${hook}. ${b.has_product_photo ? 'Leave clean empty space at the bottom center for a product, do not show any product package.' : 'A plain unlabeled product container on a tidy surface.'} Soft natural light, minimal, pastel tones, empty space at the top for a headline, no text, no letters, no logos, no watermark.`;
+        try { c.image = await freeImage(prompt, w, h); c.image_source = 'free'; c.visual.text_color = 'dark'; }
+        catch (e) { image_errors.push(`${CR_FORMATS[c.format].label}: 무료 이미지 서비스 응답 없음 (${esc(e.message || e)}) → 기본 배경 사용`); }
+      }));
+      const okN = vis.filter(c => c.image).length;
+      if (vis.length) checks.push(okN === vis.length ? { ok: true, label: `무료 AI 이미지 ${okN}장 생성 (Pollinations)` } : { ok: false, label: `이미지 ${okN}/${vis.length}장 생성 (실패분은 기본 배경)` });
+    }
+    return { ok: true, type: 'creative', checks, image_errors,
       data: { concept: `"${clip(hook, 24)}" 공감형 크리에이티브`, key_message: `${clip(hook, 20)}, ${n}로`, creatives,
         checklist: ['입력된 제품 특징만 사용 (효능·수치 추가 없음)', '과장·금지 표현 미사용', '매체별 글자 수 제한 준수', '이미지 속 글자 없이 카피는 별도 레이어'] } };
   },
@@ -1060,19 +1265,19 @@ const MOCK = {
 };
 
 /* ============================ 이력 ============================ */
-const ICON = { performance: '🎯', influencer: '🤝', report: '📈', creative: '🎨' };
+const ICON = { performance: '<svg class="ic"><use href="#i-target"/></svg>', influencer: '<svg class="ic"><use href="#i-users"/></svg>', report: '<svg class="ic"><use href="#i-trend"/></svg>', creative: '<svg class="ic"><use href="#i-palette"/></svg>' };
 function renderHistory() {
   $('#hList').innerHTML = records.length ? records.map(h => `<div class="hist"><div class="ic">${ICON[h.type]}</div><div class="body"><div class="ttl">${esc(h.title)}</div>
     <div class="muted">${new Date(h.at).toLocaleString('ko-KR')} · ${h.source === 'n8n' ? 'n8n' : '데모'} · 수정 ${h.revisions}회</div>
     <div style="margin:4px 0">${esc(h.summary)}</div><span class="timechip">수작업 ${h.manual_min}분 → <b>${h.chloe_min}분</b> (${Math.round((1 - h.chloe_min / h.manual_min) * 100)}% 단축)</span></div></div>`).join('')
-    : '<div class="empty" style="padding:30px"><div class="ico">🗂</div>아직 승인한 업무가 없어요.</div>';
-  $('#hCollab').innerHTML = collabs.length ? collabs.map((c, i) => `<div class="hist"><div class="ic">🤝</div><div class="body"><div class="ttl">${esc(c.name)} <span class="muted">${esc(c.handle)} · ${esc(c.platform)}</span></div>
+    : '<div class="empty" style="padding:30px"><div class="ico"><svg class="ic"><use href="#i-folder"/></svg></div>아직 승인한 업무가 없어요.</div>';
+  $('#hCollab').innerHTML = collabs.length ? collabs.map((c, i) => `<div class="hist"><div class="ic"><svg class="ic"><use href="#i-users"/></svg></div><div class="body"><div class="ttl">${esc(c.name)} <span class="muted">${esc(c.handle)} · ${esc(c.platform)}</span></div>
     <div class="muted">${esc(c.product)}${c.tier ? ' · ' + esc(c.tier) : ''} · 예상 단가 ${won(c.cost)}</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
       <select data-ci="${i}" data-ck="status" style="width:auto;padding:5px 8px;font-size:13px">${['제안 발송 대기', '조건 협의 중', '계약 완료', '콘텐츠 게시 완료'].map(s => `<option ${s === c.status ? 'selected' : ''}>${s}</option>`).join('')}</select>
       <select data-ci="${i}" data-ck="result" style="width:auto;padding:5px 8px;font-size:13px"><option value="">성과 미기록</option><option value="good" ${c.result === 'good' ? 'selected' : ''}>👍 성과 좋음</option><option value="bad" ${c.result === 'bad' ? 'selected' : ''}>👎 성과 아쉬움</option></select>
       <label class="chips"><label><input type="checkbox" data-ci="${i}" data-ck="assetOk" ${c.assetOk ? 'checked' : ''}>광고 소재 사용 허가</label></label>
-    </div></div></div>`).join('') : '<div class="empty" style="padding:30px"><div class="ico">🤝</div>인플루언서 계획을 승인하면 1순위 후보가 여기 추가돼요.</div>';
+    </div></div></div>`).join('') : '<div class="empty" style="padding:30px"><div class="ico"><svg class="ic"><use href="#i-users"/></svg></div>인플루언서 계획을 승인하면 1순위 후보가 여기 추가돼요.</div>';
 }
 $('#hCollab').addEventListener('change', e => { const t = e.target, i = t.dataset.ci; if (i === undefined) return; collabs[i][t.dataset.ck] = t.type === 'checkbox' ? t.checked : t.value; store.set('collabs', collabs); updateStats(); toast('협업 정보를 저장했어요'); });
 $('#hExport').onclick = () => downloadText('chloe_history.json', JSON.stringify({ product, history: records, collabs }, null, 2));
@@ -1083,6 +1288,7 @@ function updateStats() {
   $('#stDone').textContent = records.length + '건';
   $('#stRate').textContent = records.length ? Math.round(records.reduce((a, h) => a + (1 - h.chloe_min / h.manual_min), 0) / records.length * 100) + '%' : '-';
   $('#stCollab').textContent = collabs.length + '명';
+  $('#stSaved2').textContent = $('#stSaved').textContent; $('#stRate2').textContent = $('#stRate').textContent;
 }
 
 /* ============================ 설정 ============================ */
