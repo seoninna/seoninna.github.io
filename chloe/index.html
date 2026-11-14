@@ -444,6 +444,7 @@ tr.inpf td{background:#f8f7ff}
           <label class="f"><span>판매가 (원)</span><input type="number" id="prPrice"></label>
         </div>
         <label class="f"><span>제품 특징 <em>(입력한 내용만 사실로 사용해요)</em></span><textarea id="prFeat" rows="3"></textarea></label>
+        <label class="f"><span>이미지용 제품 묘사 <em>(영어로 쓰면 이미지가 훨씬 정확해요 · 비우면 자동 추정)</em></span><input type="text" id="prLook" placeholder="예: a white round jar of moisturizing gel cream, lid off"></label>
         <label class="f"><span>예상 타겟</span><input type="text" id="prTarget"></label>
         <div class="row2">
           <label class="f"><span>타겟 성별</span><select id="prGender"><option>여성</option><option>남성</option><option>무관</option></select></label>
@@ -655,6 +656,7 @@ function copy(text) { navigator.clipboard?.writeText(text).then(() => toast('복
 const DEFAULT_PRODUCT = {
   name: '모아 세라마이드 수분크림', cat: '뷰티', price: 32000,
   feat: '세라마이드 3종·판테놀 함유, 끈적임 없는 젤크림 제형, 무향, 50ml, 민감성 피부 자극 테스트 완료',
+  look: 'a white round jar of moisturizing gel cream with the lid off beside it, glossy translucent gel texture, a small swirl of cream swatch next to the jar',
   target: '건조하고 예민한 피부로 고민하는 20~30대 직장인 여성', tone: '담백하고 신뢰감 있게, 과장 없이',
   gender: '여성', ages: ['20대', '30대'], keywords: '스킨케어, 민감성, 수분, 보습'
 };
@@ -677,7 +679,7 @@ function go(id) {
 document.addEventListener('click', e => { const g = e.target.closest('[data-go]'); if (g) go(g.dataset.go); });
 
 /* ============================ 제품 정보 ============================ */
-const PF = { name: '#prName', cat: '#prCat', price: '#prPrice', feat: '#prFeat', target: '#prTarget', tone: '#prTone', gender: '#prGender', keywords: '#prKw' };
+const PF = { name: '#prName', cat: '#prCat', price: '#prPrice', feat: '#prFeat', target: '#prTarget', tone: '#prTone', gender: '#prGender', keywords: '#prKw', look: '#prLook' };
 Object.entries(PF).forEach(([k, s]) => { $(s).value = product[k]; $(s).addEventListener('input', () => { product[k] = k === 'price' ? Number($(s).value) : $(s).value; store.set('product', product); renderProdHints(); }); });
 $$('#prAges input').forEach(i => { i.checked = product.ages.includes(i.value); i.addEventListener('change', () => { product.ages = $$('#prAges input:checked').map(x => x.value); store.set('product', product); renderProdHints(); }); });
 function renderProdHints() {
@@ -936,6 +938,18 @@ function downloadText(name, text) { const a = document.createElement('a'); a.hre
 // 무료 이미지 생성 (API 키 없음). 서비스 주소가 바뀌면 여기만 수정
 const FREE_IMAGE_URL = 'https://image.pollinations.ai/prompt/{prompt}?width={width}&height={height}&seed={seed}&nologo=true&model=flux';
 const CAT_EN = { '뷰티': 'skincare and beauty', '푸드': 'food and wellness', '패션': 'fashion', '리빙': 'home and living', '테크': 'consumer tech' };
+// 한국어 → 이미지 AI용 영어 (자주 쓰는 단어만)
+const KO_PRODUCT = [['수분크림', 'a jar of moisturizing face cream'], ['젤크림', 'a jar of gel cream'], ['크림', 'a jar of face cream'], ['세럼', 'a glass serum dropper bottle'], ['앰플', 'a glass ampoule dropper bottle'], ['토너', 'a toner bottle'], ['선크림', 'a sunscreen tube'], ['로션', 'a lotion pump bottle'], ['클렌저', 'a facial cleanser tube'], ['마스크팩', 'a sheet mask pouch'], ['립', 'a lipstick'], ['쿠션', 'a cushion compact'], ['샴푸', 'a shampoo bottle'], ['향수', 'a perfume bottle'], ['캔들', 'a scented candle'], ['디퓨저', 'a reed diffuser'], ['쉐이크', 'a protein shake bottle'], ['단백질', 'a protein powder pouch'], ['커피', 'a coffee bag and a cup of coffee'], ['차', 'a tea box and a cup of tea'], ['그래놀라', 'a granola pouch and bowl'], ['쿠키', 'a box of cookies'], ['티셔츠', 'a neatly folded t-shirt'], ['가방', 'a handbag'], ['신발', 'a pair of sneakers'], ['이어폰', 'a wireless earbuds case'], ['텀블러', 'a tumbler'], ['키보드', 'a keyboard']];
+const KO_SCENE = [['겨울', 'winter'], ['출근', 'morning commute'], ['사무실', 'office desk'], ['직장인', 'office worker'], ['건조', 'dry indoor air'], ['자기 전', 'bedtime nightstand'], ['밤', 'night'], ['아침', 'morning'], ['루틴', 'daily routine'], ['성분', 'clean ingredients, minimal laboratory style'], ['여름', 'summer'], ['봄', 'spring'], ['가을', 'autumn'], ['카페', 'cafe'], ['감성', 'cozy aesthetic'], ['욕실', 'bathroom'], ['세면대', 'bathroom sink'], ['여행', 'travel'], ['운동', 'workout'], ['캠핑', 'camping'], ['주방', 'kitchen'], ['선물', 'gift'], ['크리스마스', 'christmas'], ['햇살', 'warm sunlight'], ['자연', 'green leaves, nature'], ['바다', 'beach'], ['촉촉', 'dewy and hydrated'], ['수분', 'water droplets, hydration'], ['미니멀', 'minimal'], ['고급', 'premium luxury'], ['20대', 'young adults']];
+const FEAT_EN = [['젤', 'glossy translucent gel texture'], ['무향', 'clean and simple'], ['보습', 'moisturizing'], ['진정', 'soothing'], ['비건', 'vegan, plants'], ['저당', 'healthy'], ['유기농', 'organic']];
+function imagePrompt(b, hook) {
+  const t = `${b.product} ${b.features}`, pick = (L, txt) => L.filter(([k]) => txt.includes(k)).map(([, v]) => v);
+  const prodEn = (b.look || '').trim() || (pick(KO_PRODUCT, t)[0] || `a plain unlabeled ${CAT_EN[b.category] || 'lifestyle'} product`);
+  const featEn = (b.look || '').trim() ? '' : [...new Set(pick(FEAT_EN, t))].join(', ');
+  const scene = [...new Set(pick(KO_SCENE, String(b.prompt)))].join(', ') || 'clean everyday lifestyle';
+  const subject = b.has_product_photo ? 'No product in the image. Leave clean empty space at the bottom center (a plain surface) for placing a product later.' : `Main subject: ${prodEn}${featEn ? ', ' + featEn : ''}, unlabeled packaging, placed in the lower center.`;
+  return `Professional advertising product photography for a ${CAT_EN[b.category] || 'lifestyle'} brand. ${subject} Scene and mood: ${scene}. Soft natural light, shallow depth of field, clean minimal composition, soft pastel color palette, empty space at the top for a headline, photorealistic. No text, no letters, no logos, no watermark.`;
+}
 async function freeImage(prompt, w, h) {
   const url = FREE_IMAGE_URL.replace('{prompt}', encodeURIComponent(prompt)).replace('{width}', w).replace('{height}', h).replace('{seed}', Math.floor(Math.random() * 1e6));
   const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 90000);
@@ -967,7 +981,7 @@ let productPhoto = null, productImgEl = null;
 async function setPhoto(url) {
   productPhoto = url; productImgEl = null;
   if (url) { try { productImgEl = await loadImg(url); } catch (e) { productPhoto = null; } }
-  $('#crPhotoPrev').innerHTML = productPhoto ? `<div class="photo-prev"><img src="${productPhoto}" alt="제품 사진"><span>시안에 제품 사진을 합성해요</span><button class="btn sm" id="crPhotoDel">삭제</button></div>` : '제품 사진을 올리면 시안에 합성돼요. 배경을 지운 PNG가 가장 자연스러워요.';
+  $('#crPhotoPrev').innerHTML = productPhoto ? `<div class="photo-prev"><img src="${productPhoto}" alt="제품 사진"><span>시안에 제품 사진을 합성해요</span><button class="btn sm" id="crPhotoDel">삭제</button></div>` : '제품 모양을 정확하게 보여주려면 실제 제품 사진을 올리세요. AI는 배경만 만들고 사진을 합성해요 (배경을 지운 PNG 추천).';
 }
 $('#crPhoto').onchange = e => {
   const f = e.target.files[0]; if (!f) return;
@@ -987,7 +1001,7 @@ function buildCre() {
   const q = $('#crImg').value;
   return { product: product.name, category: product.cat, price: product.price, features: product.feat, target: product.target, tone: product.tone,
     prompt: $('#crPrompt').value.trim(), formats: $$('#crFmt input:checked').map(i => i.value),
-    make_image: q !== 'off', quality: q === 'off' ? 'low' : q, has_product_photo: !!productPhoto };
+    make_image: q !== 'off', quality: q === 'off' ? 'low' : q, has_product_photo: !!productPhoto, look: product.look || '' };
 }
 const clen = s => [...String(s || '')].length;
 let crState = { res: null, sel: {}, urls: {} };
@@ -1017,8 +1031,9 @@ function creativeCard(i) {
   const txt = `[${F.label}]\n${v.headline}\n${v.body}\nCTA: ${v.cta}${c.hashtags ? '\n' + c.hashtags.join(' ') : ''}`;
   return `<div class="crc" id="crc-${i}"><div style="margin-bottom:10px"><b>${F.label}</b> <span class="badge">${F.ratio}</span> ${c.image ? `<span class="badge good">${c.image_source === 'free' ? '무료 AI 이미지' : 'AI 이미지'}</span>` : F.visual ? '<span class="badge warn">기본 배경</span>' : ''}</div>
     <div class="crc-grid"><div>${mock}</div><div>${vars}
-      <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm" data-act="copy" data-text="${encodeURIComponent(txt)}">선택안 복사</button>${F.visual ? `<button class="btn sm" data-crdl="${i}"><svg class="ic"><use href="#i-down"/></svg> 시안 이미지</button>` : ''}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm" data-act="copy" data-text="${encodeURIComponent(txt)}">선택안 복사</button>${F.visual ? `<button class="btn sm" data-crdl="${i}"><svg class="ic"><use href="#i-down"/></svg> 시안 이미지</button><button class="btn sm" data-crre="${i}"><svg class="ic"><use href="#i-repeat"/></svg> 이미지 다시 만들기</button>` : ''}</div>
       ${c.visual && c.visual.description_ko ? `<div class="muted" style="margin-top:8px"><svg class="ic"><use href="#i-image"/></svg> ${esc(c.visual.description_ko)}</div>` : ''}
+      ${c.visual && c.visual.image_prompt_en ? `<details class="muted" style="margin-top:6px"><summary style="cursor:pointer">이미지 AI에 보낸 영어 프롬프트</summary><div class="code" style="display:block;margin-top:6px">${esc(c.visual.image_prompt_en)}</div></details>` : ''}
     </div></div></div>`;
 }
 async function drawCreative(i) {
@@ -1031,6 +1046,16 @@ function afterCre(res) { (res.data.creatives || []).forEach((c, i) => drawCreati
 $('#crOut').addEventListener('click', e => {
   const v = e.target.closest('[data-crv]');
   if (v) { const [i, j] = v.dataset.crv.split(':').map(Number); crState.sel[i] = j; $('#crc-' + i).outerHTML = creativeCard(i); drawCreative(i); return; }
+  const re = e.target.closest('[data-crre]');
+  if (re) {
+    const i = Number(re.dataset.crre), c = crState.res.data.creatives[i];
+    const [w, h] = c.format === 'instagram_feed' ? [1024, 1024] : c.format === 'kakao_bizboard' ? [1536, 640] : [864, 1536];
+    const prompt = (c.visual && c.visual.image_prompt_en) || imagePrompt({ ...buildCre() }, '');
+    re.disabled = true; re.innerHTML = '이미지 만드는 중… (20~60초)';
+    freeImage(prompt, w, h).then(url => { c.image = url; c.image_source = 'free'; c.visual = { ...(c.visual || {}), text_color: 'dark' }; $('#crc-' + i).outerHTML = creativeCard(i); drawCreative(i); toast('새 이미지를 만들었어요'); })
+      .catch(err => { re.disabled = false; re.innerHTML = '다시 시도'; toast('이미지 생성 실패: ' + err.message); });
+    return;
+  }
   const dl = e.target.closest('[data-crdl]');
   if (dl) { const i = dl.dataset.crdl, c = crState.res.data.creatives[i]; const a = document.createElement('a'); a.href = crState.urls[i]; a.download = `${product.name}_${c.format}_${'ABC'[crState.sel[i] || 0]}안.jpg`; a.click(); }
 });
@@ -1221,7 +1246,7 @@ const MOCK = {
         { angle: '문제 공감', headline: clip(hook, F.hl), body: clip(`${f1}. ${n}로 가볍게 시작해요.`, F.bl), cta: '지금 써보기' },
         { angle: '성분·근거', headline: clip(f1, F.hl), body: clip(`${f2} · ${f3}. 꼼꼼히 비교하고 고르세요.`, F.bl), cta: '자세히 보기' },
         { angle: '사용 장면', headline: clip(`하루 한 번, ${b.category} 루틴`, F.hl), body: clip(`${who ? who + '를 위한 ' : ''}${n}. 오늘부터 가볍게.`, F.bl), cta: k === 'naver_search' ? '스토어 바로가기' : '구매하기' }],
-      visual: F.visual ? { description_ko: `"${hook}" 분위기의 ${b.category} 광고 사진, 카피용 여백`, image_prompt_en: 'soft natural light lifestyle scene, empty space for copy', text_color: 'dark' } : null,
+      visual: F.visual ? { description_ko: `"${hook}" 분위기의 ${b.category} 광고 사진, 카피용 여백`, image_prompt_en: imagePrompt(b, hook), text_color: 'dark' } : null,
       hashtags: ['#' + n.replace(/\s/g, ''), '#' + b.category, ...String(product.keywords || '').split(',').map(s => s.trim()).filter(Boolean).slice(0, 2).map(s => '#' + s)],
       image: null }; });
     const image_errors = [], checks = [{ ok: true, label: '모든 카피가 매체별 글자 수 제한 이내' }, { ok: true, label: '과장·금지 표현 없음' }];
@@ -1229,8 +1254,7 @@ const MOCK = {
       const vis = creatives.filter(c => CR_FORMATS[c.format].visual);
       await Promise.all(vis.map(async c => {
         const [w, h] = c.format === 'instagram_feed' ? [1024, 1024] : c.format === 'kakao_bizboard' ? [1536, 640] : [864, 1536];
-        const prompt = `Advertising lifestyle photograph for a ${CAT_EN[b.category] || 'lifestyle'} brand. Mood: ${hook}. ${b.has_product_photo ? 'Leave clean empty space at the bottom center for a product, do not show any product package.' : 'A plain unlabeled product container on a tidy surface.'} Soft natural light, minimal, pastel tones, empty space at the top for a headline, no text, no letters, no logos, no watermark.`;
-        try { c.image = await freeImage(prompt, w, h); c.image_source = 'free'; c.visual.text_color = 'dark'; }
+        try { c.image = await freeImage(c.visual.image_prompt_en, w, h); c.image_source = 'free'; c.visual.text_color = 'dark'; }
         catch (e) { image_errors.push(`${CR_FORMATS[c.format].label}: 무료 이미지 서비스 응답 없음 (${esc(e.message || e)}) → 기본 배경 사용`); }
       }));
       const okN = vis.filter(c => c.image).length;
