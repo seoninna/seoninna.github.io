@@ -68,7 +68,8 @@ n8n 서비스 → **Variables** 탭 → **+ New Variable**
 3. n8n 접속 → **Credentials → Create credential** → `OpenAI` 검색 → **OpenAI API** → 키 붙여넣기 → **Save**
 4. **이미지 생성(🎨 소재 스튜디오)을 쓰려면**: OpenAI의 `gpt-image-1` 모델은 **조직 인증**이 필요합니다.
    platform.openai.com → **Settings → Organization → General → Verify Organization** (신분증 인증, 몇 분 소요)
-   - 인증이 어렵다면 4단계 후 `Chloe 04` 워크플로의 `요청 정리 · 설정` 노드 맨 위에서 `IMAGE_MODEL: 'dall-e-3'` 로 바꿔보세요.
+   - **인증이 안 되거나 학교 지원 키라 이미지 모델이 막혀 있어도 괜찮아요.** `Chloe 04`는 OpenAI 이미지가 실패하면 **무료 이미지 서비스(Pollinations, API 키 불필요)** 로 자동 대체합니다.
+     OpenAI 이미지를 아예 안 쓰려면 `요청 정리 · 설정` 노드 맨 위에서 `IMAGE_PROVIDER: 'free'` 로 바꾸면 더 빨라요.
    - 비용 참고: 저품질(low) 이미지 1장 약 15~30원 수준, 텍스트(gpt-4o-mini)는 1회 1~3원 수준
 
 ## 4단계. 워크플로 4개 불러오기 (15분)
@@ -82,7 +83,8 @@ GitHub의 `chloe/n8n` 폴더에서 JSON 4개를 내려받습니다 (파일 클�
 
 1. n8n 홈 → **Create workflow** → 오른쪽 위 `⋯` → **Import from File...** → 파일 선택
 2. **OpenAI Chat Model** 노드 더블클릭 → Credential에서 3단계 키 선택
-3. (`04_chloe_creative` 만) **이미지 생성 (OpenAI)** 노드도 열어서 → Authentication의 **OpenAI** Credential 선택
+3. (`04_chloe_creative` 만) **이미지 생성 (OpenAI)** 노드도 열어서 → Authentication의 **OpenAI** Credential 선택 (빨간 ▲가 있으면 Publish가 안 됩니다)
+   `무료 이미지 생성 (예비)` 노드는 키가 필요 없어 설정할 것이 없어요.
 4. **Save** (Ctrl+S) → 오른쪽 위 **Publish** (구버전은 Active 토글)
 
 > `02` 워크플로의 `인플루언서 시트 불러오기`, `유튜브 채널 검색/통계` 노드는 설정 전에는 실행 시 주황색 경고가 뜰 수 있는데 **정상**입니다. 실패하면 자동으로 건너뛰고(가상 샘플로) 계속 진행하도록 만들어 두었습니다.
@@ -176,7 +178,7 @@ GitHub의 `chloe/n8n` 폴더에서 JSON 4개를 내려받습니다 (파일 클�
 1. 대표가 "겨울 출근길, 건조함에 지친 직장인에게 공감하는 광고"처럼 **말로 요청**
 2. AI Agent가 컨셉을 잡고 매체별 **카피 3안(A/B/C 테스트용)** + **이미지 프롬프트** 작성
 3. 코드가 **매체별 글자 수**(예: 네이버 제목 15자)·과장 표현을 검사
-4. OpenAI 이미지 모델이 매체 비율(1:1, 9:16, 배너)로 **배경 시안** 생성
+4. OpenAI 이미지 모델이 매체 비율(1:1, 9:16, 배너)로 **배경 시안** 생성 (실패하면 무료 이미지 서비스로 자동 대체 · 데모 모드에서도 무료 서비스로 실제 이미지 생성)
 5. 화면에서 카피 + 이미지 + (올린 경우) **실제 제품 사진**을 합성 → 인스타 피드/스토리, 숏츠, 틱톡, 카카오 비즈보드 목업으로 보여주고 이미지 파일로 다운로드
    - 이미지 안에 글자를 그리지 않게 하고 카피는 따로 얹기 때문에, AI 이미지의 한글 깨짐 문제가 없습니다.
 
@@ -209,7 +211,9 @@ GitHub의 `chloe/n8n` 폴더에서 JSON 4개를 내려받습니다 (파일 클�
 | `Failed to fetch` | 주소 오타·서버 꺼짐·CORS | `https://` 확인, Railway Active 확인, Webhook 노드 → Options → **Allowed Origins** = `*` |
 | Webhook 주소가 `localhost` | `WEBHOOK_URL` 미설정 | 2단계 환경변수 추가 후 재배포 |
 | Publish 시 "conflict / path already in use" | 같은 Webhook 경로의 예전 워크플로가 켜져 있음 | 예전 `Chloe 02` 끄거나 삭제 |
-| 이미지 생성 실패: "organization must be verified" | OpenAI 조직 인증 필요 | 3단계 4번 인증, 또는 `IMAGE_MODEL`을 `dall-e-3`로 |
+| 이미지 생성 실패: "organization must be verified" | OpenAI 조직 인증 필요 | 무료 이미지로 자동 대체됨. 계속 실패하면 `IMAGE_PROVIDER: 'free'` |
+| "does not have access to model gpt-4o-mini" | 키가 속한 OpenAI 프로젝트(학교 지원 키 등)에서 그 모델을 막아둠 | 키 관리자에게 허용 모델 문의, 또는 4개 워크플로의 OpenAI Chat Model에서 허용된 모델로 변경 |
+| 결과에 `데모 결과` 배지 | n8n 호출이 실패해서 데모로 본 결과 | 설정 탭 실행 방식과 n8n Executions 오류 확인 |
 | 소재 스튜디오가 오래 걸림 | 이미지 1장당 20~40초 × 매체 수 | 발표 땐 매체 2~3개만 선택, 품질 `low` |
 | 인플루언서 결과가 계속 "가상 샘플" | 시트 주소가 '웹에 게시' CSV가 아님 / 열 이름 다름 | 5-1의 3번 다시, 첫 줄 열 이름을 양식과 같게 |
 | YouTube 결과 0 | 키 미설정·환경변수 차단·할당량 초과 | 5-2 확인, `N8N_BLOCK_ENV_ACCESS_IN_NODE=false` 후 재배포 |
