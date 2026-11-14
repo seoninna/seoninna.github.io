@@ -2,22 +2,22 @@
   "name": "Chloe 01 - 퍼포먼스 마케팅 (타겟·트렌드·광고소재)",
   "nodes": [
     {
-      "id": "290498e2-0eb7-4565-9188-1bbfa16f01a5",
+      "id": "b64b9312-3606-52ab-83ab-20c822d207fe",
       "name": "설명",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
         -60,
-        -260
+        -300
       ],
       "parameters": {
         "width": 1240,
-        "height": 200,
+        "height": 240,
         "content": "## Chloe 01 · 퍼포먼스 마케팅\n프론트 → **Webhook** → 요청 정리(프롬프트 생성) → **AI Agent 클로이**(타겟·트렌드·예산·광고문구·KPI) → 결과 검증(예산 합계 보정, 과장표현 탐지) → 프론트로 응답\n\n⚠ 처음 한 번: `OpenAI Chat Model` 노드를 열어 Credential(OpenAI API 키)을 선택하세요."
       }
     },
     {
-      "id": "0d36699c-e482-48f7-b243-f5ff0334ed8f",
+      "id": "5c671b8f-6580-5d98-8d50-5233c28e7eb1",
       "name": "Webhook (프론트 요청 받기)",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
@@ -25,7 +25,6 @@
         0,
         0
       ],
-      "webhookId": "1261d0f9-2913-4ab0-9d42-374d8befb7f8",
       "parameters": {
         "httpMethod": "POST",
         "path": "chloe-performance",
@@ -33,10 +32,11 @@
         "options": {
           "allowedOrigins": "*"
         }
-      }
+      },
+      "webhookId": "674da0b7-db3c-5691-bf1c-db3c5ba52552"
     },
     {
-      "id": "4f0481cd-2c27-4f2a-b624-3a0bd428a8fc",
+      "id": "32ff94f3-3b16-52b5-bbfc-b9c2cd13e09f",
       "name": "요청 정리",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -49,12 +49,12 @@
       }
     },
     {
-      "id": "251990c6-52be-4a60-b8ca-aa096e211139",
+      "id": "abf823a2-6a10-596a-b96b-b8b95a9e7000",
       "name": "AI Agent 클로이",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 1.7,
       "position": [
-        500,
+        480,
         0
       ],
       "parameters": {
@@ -67,12 +67,40 @@
       }
     },
     {
-      "id": "eddebe9f-3b21-4f4d-8b0c-ebbf384bd02b",
+      "id": "bef331a8-58ab-5c04-ba59-2c503f2580c4",
+      "name": "결과 검증",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// AI 응답에서 JSON만 안전하게 꺼내기\nfunction parseJson(t) {\n  t = String(t || '').replace(/```json/gi, '').replace(/```/g, '');\n  const s = t.indexOf('{'), e = t.lastIndexOf('}');\n  if (s < 0 || e < 0) throw new Error('JSON not found');\n  return JSON.parse(t.slice(s, e + 1));\n}\n\nconst out = $input.first().json.output;\nconst req = $('요청 정리').first().json;\nlet data, checks = [];\ntry { data = parseJson(out); } catch (e) { data = { raw: String(out || '') }; checks.push({ ok: false, label: 'AI 응답 JSON 변환 실패 → 원문 표시' }); }\n\n// 검증 1: 예산 합계가 총예산과 같은지 확인하고, 다르면 비율대로 자동 보정\nif (Array.isArray(data.budget_plan) && data.budget_plan.length) {\n  const sum = data.budget_plan.reduce((a, c) => a + Number(c.amount || 0), 0);\n  if (sum !== req.request.budget && sum > 0) {\n    let acc = 0;\n    data.budget_plan.forEach((c, i) => {\n      if (i === data.budget_plan.length - 1) c.amount = req.request.budget - acc;\n      else { c.amount = Math.round(Number(c.amount) / sum * req.request.budget / 1000) * 1000; acc += c.amount; }\n    });\n    checks.push({ ok: false, label: `예산 합계 불일치(${sum.toLocaleString()}원) → 총예산에 맞게 자동 보정` });\n  } else checks.push({ ok: true, label: '예산 합계 = 총예산 일치' });\n  data.budget_plan.forEach(c => { c.ratio = Math.round(Number(c.amount) / req.request.budget * 100); });\n}\n\n// 검증 2: 금지/과장 표현 탐지\nconst banned = ['최고', '1위', '100%', '완치', '부작용 없', '무조건', '기적'];\nconst text = JSON.stringify(data.ad_copies || []);\nconst hit = banned.filter(w => text.includes(w));\nchecks.push(hit.length ? { ok: false, label: `과장 의심 표현 발견: ${hit.join(', ')} → 대표 검토 필요` } : { ok: true, label: '과장·금지 표현 없음' });\n\nreturn [{ json: { ok: true, type: 'performance', generated_at: new Date().toISOString(), elapsed_ms: Date.now() - req.startedAt, checks, data } }];\n"
+      }
+    },
+    {
+      "id": "ecfb16f9-ce2d-52fe-94b9-794270418d7c",
+      "name": "Respond to Webhook (결과 보내기)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        960,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "711b3c28-767f-5e0c-923b-ef76725eba7e",
       "name": "OpenAI Chat Model",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
       "position": [
-        420,
+        400,
         240
       ],
       "parameters": {
@@ -84,48 +112,20 @@
         },
         "options": {
           "temperature": 0.7,
-          "maxTokens": 4000
+          "maxTokens": 6000
         }
       }
     },
     {
-      "id": "a1791096-0a46-4f94-b013-45616e6aadb4",
+      "id": "809f02ba-f1ef-5c5a-9950-29a2171fb5ce",
       "name": "Calculator",
       "type": "@n8n/n8n-nodes-langchain.toolCalculator",
       "typeVersion": 1,
       "position": [
-        640,
+        620,
         240
       ],
       "parameters": {}
-    },
-    {
-      "id": "30dd059b-fee0-4bd5-a37c-2a36f180d67a",
-      "name": "결과 검증",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        860,
-        0
-      ],
-      "parameters": {
-        "jsCode": "// AI 응답에서 JSON만 안전하게 꺼내기\nfunction parseJson(t) {\n  t = String(t || '').replace(/```json/gi, '').replace(/```/g, '');\n  const s = t.indexOf('{'), e = t.lastIndexOf('}');\n  if (s < 0 || e < 0) throw new Error('JSON not found');\n  return JSON.parse(t.slice(s, e + 1));\n}\n\nconst out = $input.first().json.output;\nconst req = $('요청 정리').first().json;\nlet data, checks = [];\ntry { data = parseJson(out); } catch (e) { data = { raw: String(out || '') }; checks.push({ ok: false, label: 'AI 응답 JSON 변환 실패 → 원문 표시' }); }\n\n// 검증 1: 예산 합계가 총예산과 같은지 확인하고, 다르면 비율대로 자동 보정\nif (Array.isArray(data.budget_plan) && data.budget_plan.length) {\n  const sum = data.budget_plan.reduce((a, c) => a + Number(c.amount || 0), 0);\n  if (sum !== req.request.budget && sum > 0) {\n    let acc = 0;\n    data.budget_plan.forEach((c, i) => {\n      if (i === data.budget_plan.length - 1) c.amount = req.request.budget - acc;\n      else { c.amount = Math.round(Number(c.amount) / sum * req.request.budget / 1000) * 1000; acc += c.amount; }\n    });\n    checks.push({ ok: false, label: `예산 합계 불일치(${sum.toLocaleString()}원) → 총예산에 맞게 자동 보정` });\n  } else checks.push({ ok: true, label: '예산 합계 = 총예산 일치' });\n  data.budget_plan.forEach(c => { c.ratio = Math.round(Number(c.amount) / req.request.budget * 100); });\n}\n\n// 검증 2: 금지/과장 표현 탐지\nconst banned = ['최고', '1위', '100%', '완치', '부작용 없', '무조건', '기적'];\nconst text = JSON.stringify(data.ad_copies || []);\nconst hit = banned.filter(w => text.includes(w));\nchecks.push(hit.length ? { ok: false, label: `과장 의심 표현 발견: ${hit.join(', ')} → 대표 검토 필요` } : { ok: true, label: '과장·금지 표현 없음' });\n\nreturn [{ json: { ok: true, type: 'performance', generated_at: new Date().toISOString(), elapsed_ms: Date.now() - req.startedAt, checks, data } }];\n"
-      }
-    },
-    {
-      "id": "c5d19473-d407-47c8-8947-40249bf8510f",
-      "name": "Respond to Webhook (결과 보내기)",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.1,
-      "position": [
-        1080,
-        0
-      ],
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ JSON.stringify($json) }}",
-        "options": {}
-      }
     }
   ],
   "connections": {
