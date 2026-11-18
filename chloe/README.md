@@ -69,7 +69,8 @@ n8n 서비스 → **Variables** 탭 → **+ New Variable**
 4. **이미지 생성(🎨 소재 스튜디오)을 쓰려면**: OpenAI의 `gpt-image-1` 모델은 **조직 인증**이 필요합니다.
    platform.openai.com → **Settings → Organization → General → Verify Organization** (신분증 인증, 몇 분 소요)
    - **인증이 안 되거나 학교 지원 키라 이미지 모델이 막혀 있어도 괜찮아요.** `Chloe 04`는 OpenAI 이미지가 실패하면 **무료 이미지 서비스(Pollinations, API 키 불필요)** 로 자동 대체합니다.
-     OpenAI 이미지를 아예 안 쓰려면 `요청 정리 · 설정` 노드 맨 위에서 `IMAGE_PROVIDER: 'free'` 로 바꾸면 더 빨라요.
+     OpenAI 이미지를 아예 안 쓰려면 `요청 정리 · 설정` 노드 맨 위에서 `IMAGE_PROVIDER: 'free'` 로 바꾸면 더 빨라요. (**학교 지원 키는 이미지 모델이 모두 막혀 있어 `'free'` 권장**)
+   - 무료 서비스는 **같은 서버에서 45초에 1장**만 만들 수 있어요. 그래서 요청마다 정사각형 1장을 만들어 매체 비율(1:1, 9:16, 배너)에 맞게 잘라 씁니다. 연속으로 누르면 실패할 수 있으니 45초 정도 간격을 두세요.
    - 비용 참고: 저품질(low) 이미지 1장 약 15~30원 수준, 텍스트(gpt-4o-mini)는 1회 1~3원 수준
 
 ## 4단계. 워크플로 4개 불러오기 (15분)
@@ -82,7 +83,8 @@ GitHub의 `chloe/n8n` 폴더에서 JSON 4개를 내려받습니다 (파일 클�
 각 파일마다:
 
 1. n8n 홈 → **Create workflow** → 오른쪽 위 `⋯` → **Import from File...** → 파일 선택
-2. **OpenAI Chat Model** 노드 더블클릭 → Credential에서 3단계 키 선택
+2. **OpenAI Chat Model** 노드 더블클릭 → Credential에서 3단계 키 선택 → 모델이 `gpt-6-luna`인지 확인
+   (학교 지원 키는 `gpt-6-luna`, `gpt-5.6-luna`만 허용되고 `gpt-4o-mini`는 막혀 있어요. 개인 키라면 목록에서 원하는 모델로 바꿔도 됩니다.)
 3. (`04_chloe_creative` 만) **이미지 생성 (OpenAI)** 노드도 열어서 → Authentication의 **OpenAI** Credential 선택 (빨간 ▲가 있으면 Publish가 안 됩니다)
    `무료 이미지 생성 (예비)` 노드는 키가 필요 없어 설정할 것이 없어요.
 4. **Save** (Ctrl+S) → 오른쪽 위 **Publish** (구버전은 Active 토글)

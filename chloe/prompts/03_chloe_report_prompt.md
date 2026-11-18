@@ -2,7 +2,7 @@
 
 - n8n 파일: `n8n/03_chloe_report.json`
 - Webhook 경로: `POST /webhook/chloe-report`
-- 모델: OpenAI `gpt-4o-mini` (AI Agent 노드 + Calculator 도구)
+- 모델: OpenAI `gpt-6-luna` (AI Agent 노드 + Calculator 도구)
 
 ## 1. 시스템 프롬프트 (AI Agent 노드 → Options → System Message)
 
