@@ -2,7 +2,7 @@
 
 - n8n 파일: `n8n/04_chloe_creative.json`
 - Webhook 경로: `POST /webhook/chloe-creative`
-- 모델: OpenAI `gpt-4o-mini` (AI Agent 노드 + Calculator 도구) · 이미지: OpenAI Images API (`gpt-image-1`)
+- 모델: OpenAI `gpt-6-luna` (AI Agent 노드 + Calculator 도구) · 이미지: OpenAI Images API (`gpt-image-2`) → 실패 시 무료 서비스(Pollinations)
 
 ## 1. 시스템 프롬프트 (AI Agent 노드 → Options → System Message)
 

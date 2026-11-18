@@ -950,7 +950,15 @@ function imagePrompt(b, hook) {
   const subject = b.has_product_photo ? 'No product in the image. Leave clean empty space at the bottom center (a plain surface) for placing a product later.' : `Main subject: ${prodEn}${featEn ? ', ' + featEn : ''}, unlabeled packaging, placed in the lower center.`;
   return `Professional advertising product photography for a ${CAT_EN[b.category] || 'lifestyle'} brand. ${subject} Scene and mood: ${scene}. Soft natural light, shallow depth of field, clean minimal composition, soft pastel color palette, empty space at the top for a headline, photorealistic. No text, no letters, no logos, no watermark.`;
 }
-async function freeImage(prompt, w, h) {
+async function freeImage(prompt, w, h, retry = 1) {
+  try { return await freeImageOnce(prompt, w, h); }
+  catch (e) {
+    // 무료 한도(45초에 1장)에 걸리면 잠시 기다렸다가 한 번 더
+    if (retry > 0 && /429|402|limit/i.test(e.message)) { toast('무료 이미지 한도라 잠시 후 다시 시도해요 (약 20초)'); await sleep(20000); return freeImage(prompt, w, h, retry - 1); }
+    throw e;
+  }
+}
+async function freeImageOnce(prompt, w, h) {
   const url = FREE_IMAGE_URL.replace('{prompt}', encodeURIComponent(prompt)).replace('{width}', w).replace('{height}', h).replace('{seed}', Math.floor(Math.random() * 1e6));
   const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 90000);
   try {
@@ -1049,7 +1057,7 @@ $('#crOut').addEventListener('click', e => {
   const re = e.target.closest('[data-crre]');
   if (re) {
     const i = Number(re.dataset.crre), c = crState.res.data.creatives[i];
-    const [w, h] = c.format === 'instagram_feed' ? [1024, 1024] : c.format === 'kakao_bizboard' ? [1536, 640] : [864, 1536];
+    const [w, h] = [1024, 1024];
     const prompt = (c.visual && c.visual.image_prompt_en) || imagePrompt({ ...buildCre() }, '');
     re.disabled = true; re.innerHTML = '이미지 만드는 중… (20~60초)';
     freeImage(prompt, w, h).then(url => { c.image = url; c.image_source = 'free'; c.visual = { ...(c.visual || {}), text_color: 'dark' }; $('#crc-' + i).outerHTML = creativeCard(i); drawCreative(i); toast('새 이미지를 만들었어요'); })
@@ -1252,13 +1260,13 @@ const MOCK = {
     const image_errors = [], checks = [{ ok: true, label: '모든 카피가 매체별 글자 수 제한 이내' }, { ok: true, label: '과장·금지 표현 없음' }];
     if (b.make_image) {
       const vis = creatives.filter(c => CR_FORMATS[c.format].visual);
-      await Promise.all(vis.map(async c => {
-        const [w, h] = c.format === 'instagram_feed' ? [1024, 1024] : c.format === 'kakao_bizboard' ? [1536, 640] : [864, 1536];
-        try { c.image = await freeImage(c.visual.image_prompt_en, w, h); c.image_source = 'free'; c.visual.text_color = 'dark'; }
-        catch (e) { image_errors.push(`${CR_FORMATS[c.format].label}: 무료 이미지 서비스 응답 없음 (${esc(e.message || e)}) → 기본 배경 사용`); }
-      }));
+      // 무료 서비스는 'IP당 45초에 1장' 제한 → 정사각형 1장을 만들어 매체 비율별로 잘라 씀
+      if (vis.length) {
+        try { const img = await freeImage(vis[0].visual.image_prompt_en, 1024, 1024); vis.forEach(c => { c.image = img; c.image_source = 'free'; c.visual.text_color = 'dark'; }); }
+        catch (e) { image_errors.push(`무료 이미지 서비스 응답 없음 (${esc(e.message || e)}) → 기본 배경 사용`); }
+      }
       const okN = vis.filter(c => c.image).length;
-      if (vis.length) checks.push(okN === vis.length ? { ok: true, label: `무료 AI 이미지 ${okN}장 생성 (Pollinations)` } : { ok: false, label: `이미지 ${okN}/${vis.length}장 생성 (실패분은 기본 배경)` });
+      if (vis.length) checks.push(okN ? { ok: true, label: `무료 AI 이미지 1장 생성 → ${okN}개 매체 비율에 맞춰 사용 (Pollinations)` } : { ok: false, label: '이미지 생성 실패 (기본 배경 사용)' });
     }
     return { ok: true, type: 'creative', checks, image_errors,
       data: { concept: `"${clip(hook, 24)}" 공감형 크리에이티브`, key_message: `${clip(hook, 20)}, ${n}로`, creatives,

@@ -420,7 +420,7 @@ CRE_SCHEMA = """{
 
 CRE_PREP = r"""// ⚙ 설정 ─────────────────────────────────────────────────────
 const CONFIG = {
-  IMAGE_MODEL: 'gpt-image-1',   // 더 저렴: 'gpt-image-1-mini' / 조직 인증이 어려우면: 'dall-e-3'
+  IMAGE_MODEL: 'gpt-image-2',   // OpenAI 이미지 모델 (gpt-image-1은 종료됨). 키에 권한이 없으면 자동으로 무료 서비스 사용
   IMAGE_QUALITY: 'low',         // low(빠르고 저렴) · medium · high  (프론트에서 보내면 그 값 사용)
   // 이미지 생성 방식: 'auto' = OpenAI 먼저, 실패한 이미지는 무료 서비스로 대체
   //                  'openai' = OpenAI만 / 'free' = 무료 서비스만 (OpenAI 이미지 권한이 없을 때)
@@ -511,13 +511,16 @@ if (req.make_image) data.creatives.forEach(c => {
   const image_request = dalle
     ? { model: m, prompt: promptEn, n: 1, size, response_format: 'b64_json' }
     : { model: m, prompt: promptEn, n: 1, size, quality: req.quality, output_format: 'jpeg', output_compression: 80 };
-  const [fw, fh] = ({ '1024x1024': [1024, 1024], '1024x1536': [864, 1536], '1536x1024': [1536, 640] })[f.size] || [1024, 1024];
+  const [fw, fh] = [1024, 1024];   // 무료 이미지는 정사각형 1장을 만들어 매체 비율에 맞게 잘라 씀
   const free_url = CONFIG.FREE_IMAGE_URL.replace('{prompt}', encodeURIComponent(promptEn.slice(0, 900)))
     .replace('{width}', fw).replace('{height}', fh).replace('{seed}', Math.floor(Math.random() * 1e6));
   items.push({ json: { format: c.format, mime: dalle ? 'image/png' : 'image/jpeg', image_request,
     use_openai: CONFIG.IMAGE_PROVIDER !== 'free', use_free: CONFIG.IMAGE_PROVIDER !== 'openai', free_url } });
 });
 // 이미지가 없어도 다음 노드가 실행되도록 빈 항목 1개 (요청은 실패 처리되고 무시됨)
+// 무료 서비스는 'IP당 45초에 1장' 제한 → 요청당 1장만 만들고 다른 매체는 같은 이미지를 잘라 씀
+let freeSet = false;
+items.forEach(it => { if (it.json.use_free) { if (freeSet) it.json.use_free = false; else freeSet = true; } });
 if (!items.length) items.push({ json: { skip: true, use_openai: false, use_free: false, image_request: {} } });
 items[0].json.result = data; items[0].json.checks = checks;
 return items;
@@ -530,7 +533,7 @@ const free = $input.all();                      // 무료 서비스 결과 (바�
 const prep = $('요청 정리 · 설정').first().json;
 const first = reqItems[0].json;
 const data = first.result, checks = first.checks || [];
-const images = {}, errors = [], via = {};
+const images = {}, errors = {}, via = {};
 for (let i = 0; i < reqItems.length; i++) { const it = reqItems[i]; await (async () => {
   if (it.json.skip) return;
   const r = (res[i] && res[i].json) || {};
@@ -547,18 +550,24 @@ for (let i = 0; i < reqItems.length; i++) { const it = reqItems[i]; await (async
     let msg = r.error ? (r.error.message || r.error.description || JSON.stringify(r.error)) : '이미지 없음';
     msg = String(msg).slice(0, 240);
     if (/verif/i.test(msg)) msg += ' → OpenAI 조직 인증이 필요해요. 설정에서 IMAGE_MODEL을 dall-e-3로 바꾸거나 인증을 진행하세요.';
-    if (it.json.use_free) msg += ' / 무료 이미지 서비스도 실패';
-    errors.push(`${it.json.format}: ${msg}`);
+    const fr = free[i] && free[i].json && free[i].json.error;
+    if (it.json.use_free) msg = (prep.config.IMAGE_PROVIDER === 'free' ? '' : msg + ' / ') + '무료 이미지 서비스 실패' + (fr ? ': ' + String(fr.message || fr.description || '').slice(0, 160) : '');
+    errors[it.json.format] = msg;
   }
 })(); }
+// 무료 이미지 1장을 이미지가 없는 다른 매체에도 공유 (화면에서 비율에 맞게 잘라 씀)
+const sharedFmt = Object.keys(via)[0];
+if (sharedFmt) (data.creatives || []).forEach(c => { if (c.visual && !images[c.format]) { images[c.format] = images[sharedFmt]; via[c.format] = 'free'; delete errors[c.format]; } });
 (data.creatives || []).forEach(c => { c.image = images[c.format] || null; c.image_source = images[c.format] ? (via[c.format] === 'free' ? 'free' : 'openai') : null; });
-const want = reqItems.filter(it => !it.json.skip).length;
-if (want) checks.push(errors.length ? { ok: false, label: `이미지 ${want - errors.length}/${want}장 생성 (실패분은 기본 배경 사용)` } : { ok: true, label: `AI 이미지 ${want}장 생성 완료 (OpenAI ${want - Object.keys(via).length}장 · 무료 서비스 ${Object.keys(via).length}장)` });
-return [{ json: { ok: true, type: 'creative', generated_at: new Date().toISOString(), elapsed_ms: Date.now() - prep.startedAt, checks, image_errors: errors, data } }];
+const want = reqItems.filter(it => !it.json.skip).length, errList = Object.entries(errors).map(([f, m]) => `${f}: ${m}`);
+const nFree = Object.keys(via).length;
+if (want) checks.push(errList.length ? { ok: false, label: `이미지 ${want - errList.length}/${want}개 매체 생성 (실패분은 기본 배경 사용)` } : { ok: true, label: `AI 이미지 ${want}개 매체 완료 (OpenAI ${want - nFree} · 무료 서비스 ${nFree}${nFree > 1 ? ', 1장을 비율별로 공유' : ''})` });
+return [{ json: { ok: true, type: 'creative', generated_at: new Date().toISOString(), elapsed_ms: Date.now() - prep.startedAt, checks, image_errors: errList, data } }];
 """
 
 
 # ---------------------------------------------------------------- builder
+TEXT_MODEL = "gpt-6-luna"
 WH = "Webhook (프론트 요청 받기)"
 AG = "AI Agent 클로이"
 RS = "Respond to Webhook (결과 보내기)"
@@ -595,10 +604,11 @@ def build(fname, name, path, steps, temperature, note):
         nodes.append(n)
         if i + 1 < len(chain):
             conn[nm] = {"main": [[{"node": chain[i + 1][0], "type": "main", "index": 0}]]}
+    # 학교 지원 키에서 허용된 모델 (gpt-4o-mini는 막혀 있음). 다른 키를 쓰면 노드에서 목록으로 바꾸면 됩니다.
     nodes.append({"id": seed("model"), "name": "OpenAI Chat Model", "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
-                  "typeVersion": 1.2, "position": [agent_x - 80, 240],
-                  "parameters": {"model": {"__rl": True, "value": "gpt-4o-mini", "mode": "list", "cachedResultName": "gpt-4o-mini"},
-                                 "options": {"temperature": temperature, "maxTokens": 6000}}})
+                  "typeVersion": 1.3, "position": [agent_x - 80, 240],
+                  "parameters": {"model": {"__rl": True, "value": TEXT_MODEL, "mode": "list", "cachedResultName": TEXT_MODEL},
+                                 "builtInTools": {}, "options": {"timeout": 120000, "responseFormat": "json_object"}}})
     nodes.append({"id": seed("calc"), "name": "Calculator", "type": "@n8n/n8n-nodes-langchain.toolCalculator",
                   "typeVersion": 1, "position": [agent_x + 140, 240], "parameters": {}})
     conn["OpenAI Chat Model"] = {"ai_languageModel": [[{"node": AG, "type": "ai_languageModel", "index": 0}]]}
@@ -655,7 +665,8 @@ FLOWS = [
                                            "sendBody": True, "specifyBody": "json", "jsonBody": "={{ JSON.stringify($json.image_request) }}",
                                            "options": {"timeout": 180000}}, CONT)),
              ("무료 이미지 생성 (예비)", http({"url": "={{ (() => { const r = $('소재 검증 · 이미지 요청 준비').all()[$itemIndex].json; const ok = $json.data && $json.data[0] && $json.data[0].b64_json; return (r.use_free && !ok) ? r.free_url : 'https://example.invalid/skip-free'; })() }}",
-                                       "options": {"timeout": 120000, "response": {"response": {"responseFormat": "file", "outputPropertyName": "data"}}}}, CONT)),
+                                       "options": {"timeout": 120000, "response": {"response": {"responseFormat": "file", "outputPropertyName": "data"}}}},
+                                      {**CONT, "retryOnFail": True, "maxTries": 5, "waitBetweenTries": 5000})),
              ("결과 합치기", code(CRE_MERGE))],
          note="## Chloe 04 · 광고 소재 스튜디오\n프론트(대표 프롬프트) → **Webhook** → 요청 정리·설정 → **AI Agent 클로이**(컨셉·매체별 카피 3안·이미지 프롬프트) → 소재 검증(글자 수·금지 표현) → **이미지 생성 (OpenAI)** 매체당 1장 → 실패분은 **무료 이미지 생성 (예비)** → 결과 합치기 → 응답\n\n⚠ 처음 한 번: `OpenAI Chat Model`과 `이미지 생성 (OpenAI)` 두 노드 모두 OpenAI Credential 선택.\n이미지 방식(auto/openai/free)·모델 변경: `요청 정리 · 설정` 노드 맨 위 CONFIG. OpenAI 이미지 권한이 없으면 IMAGE_PROVIDER를 'free'로 두면 빠릅니다."),
 ]
@@ -671,7 +682,7 @@ for f in FLOWS:
 
 - n8n 파일: `n8n/{f['fname']}.json`
 - Webhook 경로: `POST /webhook/{f['path']}`
-- 모델: OpenAI `gpt-4o-mini` (AI Agent 노드 + Calculator 도구){' · 이미지: OpenAI Images API (`gpt-image-1`)' if f['fname'].startswith('04') else ''}
+- 모델: OpenAI `{TEXT_MODEL}` (AI Agent 노드 + Calculator 도구){' · 이미지: OpenAI Images API (`gpt-image-2`) → 실패 시 무료 서비스(Pollinations)' if f['fname'].startswith('04') else ''}
 
 ## 1. 시스템 프롬프트 (AI Agent 노드 → Options → System Message)
 
