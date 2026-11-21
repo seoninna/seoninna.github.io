@@ -311,10 +311,14 @@ try {
 } catch (e) {}
 if (prep.sheet_url) notes.push(sheet.length ? `팀 시트에서 후보 ${sheet.length}명` : '팀 시트를 읽지 못했어요 (웹에 게시한 CSV 주소인지 확인)');
 let yt = [];
-try { yt = ChloeEngine.fromYouTube($('유튜브 채널 통계').first().json.items); } catch (e) {}
+try { yt = ChloeEngine.fromYouTube($('유튜브 채널 통계').first().json.items, [prep.request.category]); } catch (e) {}
 if (prep.use_youtube) notes.push(yt.length ? `YouTube API에서 채널 ${yt.length}개 ('${prep.yt_query}' 검색)` : 'YouTube 검색 결과 없음 (API 키·할당량 확인)');
 let cands = [...sheet, ...yt];
-if (!cands.length && prep.use_sample) { cands = ChloeEngine.SAMPLE; notes.push('실데이터가 없어 데모용 가상 후보를 사용했어요'); }
+// 실데이터가 없는 플랫폼만 데모용 가상 후보로 채움 (예: 유튜브는 실제 채널, 인스타·틱톡은 시트 연결 전까지 샘플)
+if (prep.use_sample) {
+  const empty = prep.request.platforms.filter(pf => !cands.some(c => c.platform === pf));
+  if (empty.length) { cands = [...cands, ...ChloeEngine.SAMPLE.filter(c => empty.includes(c.platform))]; notes.push(`${empty.join('·')}은 실데이터가 없어 데모용 가상 후보 사용 (팀 시트 연결 시 실제 인물로 대체)`); }
+}
 
 const req = prep.request;
 const eng = ChloeEngine.run(req, cands);
@@ -634,8 +638,8 @@ FLOWS = [
                                 "options": {"timeout": 20000, "response": {"response": {"responseFormat": "text", "outputPropertyName": "data"}}}}, CONT)),
              (YT_SEARCH, http({"url": "https://www.googleapis.com/youtube/v3/search", "sendQuery": True,
                                "queryParameters": {"parameters": [
-                                   {"name": "part", "value": "snippet"}, {"name": "type", "value": "channel"},
-                                   {"name": "maxResults", "value": "25"}, {"name": "regionCode", "value": "KR"},
+                                   {"name": "part", "value": "snippet"}, {"name": "type", "value": "video"},
+                                   {"name": "maxResults", "value": "50"}, {"name": "regionCode", "value": "KR"},
                                    {"name": "relevanceLanguage", "value": "ko"},
                                    {"name": "q", "value": "={{ " + P2 + ".yt_query }}"},
                                    {"name": "key", "value": "={{ " + P2 + ".use_youtube ? " + P2 + ".yt_key : 'NO_KEY' }}"}]},
@@ -643,7 +647,7 @@ FLOWS = [
              (YT_STATS, http({"url": "https://www.googleapis.com/youtube/v3/channels", "sendQuery": True,
                               "queryParameters": {"parameters": [
                                   {"name": "part", "value": "snippet,statistics"},
-                                  {"name": "id", "value": "={{ ($json.items || []).map(i => (i.id && i.id.channelId) || (i.snippet && i.snippet.channelId)).filter(Boolean).join(',') }}"},
+                                  {"name": "id", "value": "={{ [...new Set(($json.items || []).map(i => (i.snippet && i.snippet.channelId) || (i.id && i.id.channelId)).filter(Boolean))].slice(0, 50).join(',') }}"},
                                   {"name": "key", "value": "={{ " + P2 + ".use_youtube ? " + P2 + ".yt_key : 'NO_KEY' }}"}]},
                               "options": {"timeout": 20000}}, CONT)),
              ("후보 통합 · 티어 · 적합도 계산", code(INF_ENGINE)),
