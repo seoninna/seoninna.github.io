@@ -720,4 +720,134 @@ ${{이전 결과 JSON}}
     with open(f"{OUT}/prompts/{f['fname']}_prompt.md", "w", encoding="utf-8") as fp:
         fp.write(md)
 
+# ======================================================== 05 CAMPAIGN CYCLE (선순환)
+CYCLE_SRC = open(os.path.join(OUT, "engine", "cycle-engine.js"), encoding="utf-8").read()
+
+CYC_SYSTEM = """너는 '클로이(Chloe)'다. 인플루언서 협업 콘텐츠를 광고로 집행한 결과를 해석해서, 다음 회차를 더 잘하게 돕는 AI 마케팅 에이전트다.
+
+[역할]
+1. 인플루언서 콘텐츠별 광고 성과 차이가 왜 났는지 해석한다.
+2. 코드가 내린 판정(유지·관찰·제외)과 예산 재배분을 대표가 납득할 수 있게 설명한다.
+3. 다음 광고 소재와 다음 회차 인플루언서 전략을 제안한다.
+
+[원칙]
+- 숫자와 판정, 예산 재배분은 코드가 이미 계산했다. 그대로 인용하고 바꾸거나 다시 계산하지 않는다.
+- 데이터가 부족한 판정(관찰)은 결론을 내리지 말고 다음 회차에서 무엇을 확인할지 말한다.
+- 인플루언서 개인을 비난하지 않고, 콘텐츠·타겟·소재 관점에서 설명한다.
+- 쉬운 한국어로 쓰고, 출력은 사용자 메시지에 있는 JSON 형식 하나만 출력한다. 코드블록, 인사말, 설명을 붙이지 않는다."""
+
+CYC_PROCESS = "// ▼ 선순환 엔진 (chloe/engine/cycle-engine.js 와 동일한 코드)\n" + CYCLE_SRC + "\n" + READ_BODY + r"""
+// ▼ 기록 저장소: 이 워크플로의 static data (n8n 데이터베이스에 저장되어 어느 컴퓨터에서든 이어짐)
+//   운영 URL(Publish 상태)로 호출했을 때만 저장됩니다. 편집 화면의 테스트 실행은 저장되지 않아요.
+const store = $getWorkflowStaticData('global');
+ChloeCycle.init(store);
+const action = v(b.action, 'get');
+let out = { ok: true, type: 'cycle', action, needs_ai: false };
+try {
+  if (action === 'start') out.campaign = ChloeCycle.start(store, b);
+  else if (action === 'evaluate') {
+    out.campaign = ChloeCycle.evaluate(store, b);
+    out.needs_ai = true;
+    out.prompt = ChloeCycle.aiPrompt(out.campaign, store);
+  } else if (action === 'reset') {
+    if (b.confirm === 'RESET') { store.pool = {}; store.campaigns = []; out.reset = true; }
+    else out = { ...out, ok: false, error: '초기화하려면 confirm 값이 필요해요' };
+  }
+} catch (e) { out = { ok: false, type: 'cycle', action, needs_ai: false, error: e.message }; }
+out.pool = ChloeCycle.poolList(store);
+out.campaigns = store.campaigns.slice(0, 10);
+out.past_collabs = ChloeCycle.pastCollabs(store);
+out.startedAt = Date.now();
+return [{ json: out }];
+"""
+
+CYC_ATTACH = PARSE_FN + r"""
+// AI 해석을 캠페인 기록에 붙여 저장
+const src = $('판정·저장 (선순환 엔진)').first().json;
+let ai = null;
+try { ai = parseJson($input.first().json.output); } catch (e) { ai = null; }
+const store = $getWorkflowStaticData('global');
+const c = (store.campaigns || []).find(x => x.id === src.campaign.id);
+if (c && ai) c.ai = ai;
+const { prompt, needs_ai, ...rest } = src;
+return [{ json: { ...rest, campaign: { ...src.campaign, ai }, campaigns: store.campaigns.slice(0, 10), elapsed_ms: Date.now() - src.startedAt } }];
+"""
+
+def build_cycle():
+    fname = "05_chloe_cycle"
+    seed = lambda x: str(uuid.uuid5(uuid.NAMESPACE_URL, f"chloe/{fname}/{x}"))
+    P, IF_, A, ATT = "판정·저장 (선순환 엔진)", "AI 해석 필요?", AG, "AI 해석 붙이기 · 저장"
+    nodes = [
+        {"id": seed("note"), "name": "설명", "type": "n8n-nodes-base.stickyNote", "typeVersion": 1, "position": [-60, -320],
+         "parameters": {"width": 1500, "height": 260, "content": "## Chloe 05 · 캠페인 사이클 (선순환)\n① 인플루언서 선정(`start`) → ② 협업 콘텐츠로 광고 → ③ 성과 입력 → ④ **판정·저장**(`evaluate`: 인플루언서별 유지/관찰/제외, 다음 회차 광고 예산 재배분) → 유지 인플루언서는 다음 추천에서 가산점, 제외는 추천에서 빠짐\n\n기록은 이 워크플로의 static data(n8n DB)에 저장됩니다. **운영 URL(Publish)로 호출할 때만 저장**돼요.\n판정할 때만 AI Agent가 해석을 붙이고, 조회(`get`)·시작(`start`)은 AI 없이 바로 응답합니다."}},
+        {"id": seed(WH), "name": WH, "type": "n8n-nodes-base.webhook", "typeVersion": 2, "position": [0, 0], "webhookId": seed("webhook-id"),
+         "parameters": {"httpMethod": "POST", "path": "chloe-cycle", "responseMode": "responseNode", "options": {"allowedOrigins": "*"}}},
+        {"id": seed(P), "name": P, "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [240, 0], "parameters": {"jsCode": CYC_PROCESS}},
+        {"id": seed(IF_), "name": IF_, "type": "n8n-nodes-base.if", "typeVersion": 2.2, "position": [480, 0],
+         "parameters": {"conditions": {"options": {"caseSensitive": True, "leftValue": "", "typeValidation": "loose"},
+                                       "conditions": [{"id": seed("cond"), "leftValue": "={{ $json.needs_ai }}", "rightValue": True,
+                                                       "operator": {"type": "boolean", "operation": "true", "singleValue": True}}],
+                                       "combinator": "and"}, "options": {}}},
+        {"id": seed(A), "name": A, "type": "@n8n/n8n-nodes-langchain.agent", "typeVersion": 1.7, "position": [720, -120],
+         "parameters": {"promptType": "define", "text": "={{ $json.prompt }}", "options": {"systemMessage": CYC_SYSTEM, "maxIterations": 5}},
+         "onError": "continueRegularOutput", "alwaysOutputData": True},
+        {"id": seed(ATT), "name": ATT, "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [980, -120], "parameters": {"jsCode": CYC_ATTACH}},
+        {"id": seed(RS), "name": RS, "type": "n8n-nodes-base.respondToWebhook", "typeVersion": 1.1, "position": [1220, 0],
+         "parameters": {"respondWith": "json", "responseBody": "={{ JSON.stringify($json) }}", "options": {}}},
+        {"id": seed("model"), "name": "OpenAI Chat Model", "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi", "typeVersion": 1.3, "position": [640, 120],
+         "parameters": {"model": {"__rl": True, "value": TEXT_MODEL, "mode": "list", "cachedResultName": TEXT_MODEL}, "builtInTools": {},
+                        "options": {"timeout": 120000, "responseFormat": "json_object"}}},
+        {"id": seed("calc"), "name": "Calculator", "type": "@n8n/n8n-nodes-langchain.toolCalculator", "typeVersion": 1, "position": [860, 120], "parameters": {}},
+    ]
+    m = lambda n: {"node": n, "type": "main", "index": 0}
+    conn = {
+        WH: {"main": [[m(P)]]}, P: {"main": [[m(IF_)]]}, IF_: {"main": [[m(A)], [m(RS)]]},
+        A: {"main": [[m(ATT)]]}, ATT: {"main": [[m(RS)]]},
+        "OpenAI Chat Model": {"ai_languageModel": [[{"node": A, "type": "ai_languageModel", "index": 0}]]},
+        "Calculator": {"ai_tool": [[{"node": A, "type": "ai_tool", "index": 0}]]},
+    }
+    wf = {"name": "Chloe 05 - 캠페인 사이클 (선순환: 판정·재배분·인플루언서 풀)", "nodes": nodes, "connections": conn, "pinData": {},
+          "settings": {"executionOrder": "v1"}, "active": False, "meta": {"templateCredsSetupCompleted": False}, "tags": []}
+    with open(f"{OUT}/n8n/{fname}.json", "w", encoding="utf-8") as fp:
+        json.dump(wf, fp, ensure_ascii=False, indent=2)
+    a = CYCLE_SRC.index("return `아래는") + len("return `"); tpl = CYCLE_SRC[a:CYCLE_SRC.index("`;\n  }", a)]
+    md = f"""# Chloe 05 - 캠페인 사이클 (선순환)
+
+- n8n 파일: `n8n/{fname}.json`
+- Webhook 경로: `POST /webhook/chloe-cycle` (`action`: `get` 조회 · `start` 캠페인 시작 · `evaluate` 성과 판정 · `reset` 초기화)
+- 모델: OpenAI `{TEXT_MODEL}` (판정할 때만 AI Agent 호출)
+
+## 1. 시스템 프롬프트 (AI Agent 노드 → Options → System Message)
+
+```text
+{CYC_SYSTEM}
+```
+
+## 2. 사용자 프롬프트 템플릿 (`engine/cycle-engine.js`의 aiPrompt → AI Agent의 Prompt로 전달)
+
+```text
+{tpl}
+```
+
+## 3. 판정 규칙 (코드, AI 아님)
+
+| 판정 | 조건 |
+|---|---|
+| 유지 | 클릭 100회·구매 5건 이상이고 ROAS ≥ 목표 |
+| 관찰 | 데이터 부족, 또는 ROAS가 목표의 80~100% |
+| 제외 | ROAS < 목표의 80% (또는 제외 판정 누적 2회) |
+
+다음 회차 광고 예산: 제외 0원 · 관찰은 지난 광고비 유지(총예산의 15% 이하) · 나머지는 유지 인플루언서에게 ROAS 비례 배분.
+유지 인플루언서는 다음 추천에서 가산점(+8), 제외 인플루언서는 추천 후보에서 빠집니다.
+
+## 4. 프롬프트 설계 포인트
+
+- 판정·예산은 코드가 정하고, AI는 이유를 설명하고 다음 소재·전략을 제안하는 역할만 맡습니다.
+- 기록(캠페인, 인플루언서 풀)은 n8n 워크플로 저장소에 남아 회차가 쌓일수록 추천이 정확해집니다.
+"""
+    with open(f"{OUT}/prompts/{fname}_prompt.md", "w", encoding="utf-8") as fp:
+        fp.write(md)
+
+build_cycle()
+
 print("ok")
