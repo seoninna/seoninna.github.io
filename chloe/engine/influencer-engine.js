@@ -246,7 +246,9 @@ const ChloeEngine = (() => {
     req = { budget: 2000000, goal: '', gender: '무관', ages: [], platforms: PLATFORMS, keywords: '', past_collabs: [], ...req };
     const platforms = (req.platforms && req.platforms.length ? req.platforms : PLATFORMS).map(normPlatform).filter(Boolean);
     const seen = new Set();
-    const pool = (candidates || []).filter(c => c && platforms.includes(c.platform)).filter(c => {
+    // 선순환: 지난 회차에서 '제외' 판정을 받은 인플루언서는 후보에서 뺀다
+    const excluded = new Set((req.past_collabs || []).filter(p => p.exclude).map(p => lower(p.handle)));
+    const pool = (candidates || []).filter(c => c && platforms.includes(c.platform) && !excluded.has(lower(c.handle))).filter(c => {
       const k = c.platform + lower(c.handle); if (seen.has(k)) return false; seen.add(k); return true;
     });
     const medianCpe = {};
@@ -260,7 +262,7 @@ const ChloeEngine = (() => {
     const by_platform = {};
     for (const p of platforms) by_platform[p] = scored.filter(c => c.platform === p).slice(0, 6);
     const sources = scored.reduce((o, c) => { o[c.source] = (o[c.source] || 0) + 1; return o; }, {});
-    return { tier_mix: mix, portfolio: pf.members, portfolio_total: pf.total, budget_left: pf.left, by_platform, sources, candidate_count: scored.length, tiers: TIERS };
+    return { tier_mix: mix, portfolio: pf.members, portfolio_total: pf.total, budget_left: pf.left, by_platform, sources, candidate_count: scored.length, excluded_count: excluded.size, tiers: TIERS };
   }
 
   // ---------------------------------------------------------------- 데모용 가상 후보 (실존 인물 아님)

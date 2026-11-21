@@ -1,0 +1,262 @@
+{
+  "name": "Chloe 05 - 캠페인 사이클 (선순환: 판정·재배분·인플루언서 풀)",
+  "nodes": [
+    {
+      "id": "a65d9af4-8c12-5b66-b0c5-faedab3bb52f",
+      "name": "설명",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -320
+      ],
+      "parameters": {
+        "width": 1500,
+        "height": 260,
+        "content": "## Chloe 05 · 캠페인 사이클 (선순환)\n① 인플루언서 선정(`start`) → ② 협업 콘텐츠로 광고 → ③ 성과 입력 → ④ **판정·저장**(`evaluate`: 인플루언서별 유지/관찰/제외, 다음 회차 광고 예산 재배분) → 유지 인플루언서는 다음 추천에서 가산점, 제외는 추천에서 빠짐\n\n기록은 이 워크플로의 static data(n8n DB)에 저장됩니다. **운영 URL(Publish)로 호출할 때만 저장**돼요.\n판정할 때만 AI Agent가 해석을 붙이고, 조회(`get`)·시작(`start`)은 AI 없이 바로 응답합니다."
+      }
+    },
+    {
+      "id": "60fcbe78-dab2-5496-9f1e-d16e7dc477bd",
+      "name": "Webhook (프론트 요청 받기)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "2767c715-294d-5899-a0e5-583f1a0c2384",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chloe-cycle",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      }
+    },
+    {
+      "id": "bd017351-c676-5f89-95ef-2dcc48d54d1b",
+      "name": "판정·저장 (선순환 엔진)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// ▼ 선순환 엔진 (chloe/engine/cycle-engine.js 와 동일한 코드)\n/* ==========================================================================\n * Chloe Cycle Engine — 캠페인 선순환\n *   ① 인플루언서 선정 → ② 협업 콘텐츠로 매체 광고 → ③ 광고 성과 입력\n *   → ④ 인플루언서별 판정(유지/관찰/제외) + 다음 회차 광고 예산 재배분 → 검증된 인플루언서 풀\n * - 프론트엔드(데모 모드)와 n8n Code 노드가 같은 코드를 사용한다.\n * - store = { pool: {키: 인플루언서}, campaigns: [캠페인] } 형태의 객체를 받아 직접 수정한다.\n *   (n8n에서는 워크플로 static data, 데모에서는 브라우저 저장소)\n * ========================================================================== */\nconst ChloeCycle = (() => {\n  const RULES = { keepRatio: 1.0, dropRatio: 0.8, minClicks: 100, minConversions: 5, watchShareMax: 0.15, maxCampaigns: 30 };\n  const keyOf = m => `${m.platform}|${String(m.handle || '').toLowerCase()}`;\n  const r2 = x => (x === null || !isFinite(x)) ? null : Math.round(x * 100) / 100;\n  const num = v => { const n = Number(String(v ?? '').replace(/[,\\s원%]/g, '')); return isFinite(n) ? n : 0; };\n  const nowIso = () => new Date().toISOString();\n\n  function init(store) {\n    store.pool = store.pool || {};\n    store.campaigns = store.campaigns || [];\n    return store;\n  }\n\n  function poolList(store) {\n    const order = { keep: 0, watch: 1, new: 2, drop: 3 };\n    return Object.values(init(store).pool).sort((a, b) => (order[a.status] - order[b.status]) || ((b.avg_roas || 0) - (a.avg_roas || 0)));\n  }\n\n  // ① 캠페인 시작: 추천 조합(인플루언서 엔진 결과)을 담는다\n  function start(store, body) {\n    init(store);\n    const product = String(body.product || '제품');\n    const round = store.campaigns.filter(c => c.product === product).length + 1;\n    const members = (body.members || []).map(m => ({\n      handle: m.handle, platform: m.platform, name: m.name || m.handle, tier: m.tier || '', tier_label: m.tier_label || '',\n      followers: num(m.followers), est_cost: num(m.est_cost), fit_score: num(m.fit_score), url: m.url || '', source: m.source || '',\n    })).filter(m => m.handle && m.platform);\n    const c = {\n      id: 'c' + Date.now().toString(36), name: body.campaign_name || `${product} ${round}회차`, product, round,\n      created_at: nowIso(), status: 'selected', influencer_budget: num(body.influencer_budget), members,\n    };\n    store.campaigns.unshift(c);\n    store.campaigns = store.campaigns.slice(0, RULES.maxCampaigns);\n    for (const m of members) {\n      const k = keyOf(m), p = store.pool[k];\n      if (!p) store.pool[k] = { ...m, status: 'new', rounds: [], totals: { ad_spend: 0, revenue: 0 }, avg_roas: null, updated_at: nowIso() };\n      else Object.assign(p, { name: m.name, followers: m.followers || p.followers, tier: m.tier || p.tier, tier_label: m.tier_label || p.tier_label, url: m.url || p.url, updated_at: nowIso() });\n    }\n    return c;\n  }\n\n  // ④ 성과 판정 + 다음 회차 예산 재배분\n  function evaluate(store, body) {\n    init(store);\n    const c = store.campaigns.find(x => x.id === body.campaign_id) || store.campaigns[0];\n    if (!c) throw new Error('캠페인이 없어요. 먼저 인플루언서 조합으로 캠페인을 시작하세요.');\n    if (!(body.results || []).length) throw new Error('광고 성과를 한 명 이상 입력해주세요.');\n    const target = num(body.target_roas) || 300;\n    const results = (body.results || []).map(r => {\n      const ad = num(r.ad_spend), imp = num(r.impressions), clk = num(r.clicks), conv = num(r.conversions), rev = num(r.revenue), collab = num(r.collab_cost);\n      const roas = ad > 0 ? rev / ad * 100 : null;\n      const total_roi = ad + collab > 0 ? rev / (ad + collab) * 100 : null;\n      const enough = clk >= RULES.minClicks && conv >= RULES.minConversions;\n      let verdict, reason;\n      if (!enough) { verdict = 'watch'; reason = `데이터 부족 (클릭 ${clk}, 구매 ${conv}건) → 한 회차 더 관찰`; }\n      else if (roas >= target * RULES.keepRatio) { verdict = 'keep'; reason = `ROAS ${r2(roas)}% ≥ 목표 ${target}%`; }\n      else if (roas >= target * RULES.dropRatio) { verdict = 'watch'; reason = `ROAS ${r2(roas)}%로 목표의 ${Math.round(RULES.dropRatio * 100)}~100% 구간 → 소재 교체 후 재확인`; }\n      else { verdict = 'drop'; reason = `ROAS ${r2(roas)}% < 목표의 ${Math.round(RULES.dropRatio * 100)}% → 다음 회차 제외`; }\n      return { handle: r.handle, platform: r.platform, name: r.name || r.handle, ad_spend: ad, impressions: imp, clicks: clk, conversions: conv, revenue: rev, collab_cost: collab,\n        ctr: imp > 0 ? r2(clk / imp * 100) : null, cvr: clk > 0 ? r2(conv / clk * 100) : null, cpa: conv > 0 ? r2(ad / conv) : null,\n        roas: r2(roas), total_roi: r2(total_roi), enough_data: enough, verdict, reason };\n    });\n    // 다음 회차 광고 예산: 제외 0, 관찰은 지난 광고비 유지(상한 15%), 나머지는 유지 인플루언서에게 ROAS 비례\n    const next = num(body.next_ad_budget) || results.reduce((s, r) => s + r.ad_spend, 0);\n    const keep = results.filter(r => r.verdict === 'keep'), watch = results.filter(r => r.verdict === 'watch');\n    const alloc = {};\n    let used = 0;\n    for (const r of watch) { const a = Math.round(Math.min(r.ad_spend, next * RULES.watchShareMax) / 10000) * 10000; alloc[keyOf(r)] = a; used += a; }\n    if (used > next) { const s = next / used; used = 0; for (const r of watch) { alloc[keyOf(r)] = Math.floor(alloc[keyOf(r)] * s / 10000) * 10000; used += alloc[keyOf(r)]; } }\n    const left = next - used;\n    const wsum = keep.reduce((s, r) => s + (r.roas || 0), 0);\n    keep.forEach((r, i) => {\n      const a = i === keep.length - 1 ? left - keep.slice(0, -1).reduce((s, x) => s + alloc[keyOf(x)], 0) : Math.round(left * (r.roas || 0) / (wsum || 1) / 10000) * 10000;\n      alloc[keyOf(r)] = Math.max(0, a);\n    });\n    const unallocated = next - Object.values(alloc).reduce((s, a) => s + a, 0);\n    const allocation = results.map(r => ({ handle: r.handle, platform: r.platform, name: r.name, verdict: r.verdict, current: r.ad_spend, proposed: alloc[keyOf(r)] || 0,\n      change_pct: r.ad_spend > 0 ? r2(((alloc[keyOf(r)] || 0) - r.ad_spend) / r.ad_spend * 100) : null }));\n    // 풀 업데이트\n    for (const r of results) {\n      const k = keyOf(r);\n      const p = store.pool[k] || (store.pool[k] = { handle: r.handle, platform: r.platform, name: r.name, status: 'new', rounds: [], totals: { ad_spend: 0, revenue: 0 } });\n      p.rounds = (p.rounds || []).filter(x => x.campaign_id !== c.id);\n      p.rounds.push({ campaign_id: c.id, campaign: c.name, round: c.round, ad_spend: r.ad_spend, revenue: r.revenue, roas: r.roas, verdict: r.verdict, at: nowIso() });\n      // 누적은 회차 기록으로 다시 계산 (같은 캠페인을 다시 판정해도 중복되지 않게)\n      const t = { ad_spend: 0, revenue: 0 };\n      for (const x of p.rounds) { t.ad_spend += x.ad_spend; t.revenue += x.revenue; }\n      p.totals = t;\n      p.avg_roas = t.ad_spend > 0 ? r2(t.revenue / t.ad_spend * 100) : null;\n      const drops = p.rounds.filter(x => x.verdict === 'drop').length;\n      p.status = r.verdict === 'keep' ? 'keep' : (r.verdict === 'drop' || drops >= 2) ? 'drop' : 'watch';\n      p.updated_at = nowIso();\n    }\n    Object.assign(c, { status: 'evaluated', evaluated_at: nowIso(), target_roas: target, results, allocation, next_ad_budget: next, unallocated });\n    const tot = results.reduce((s, r) => ({ ad: s.ad + r.ad_spend, rev: s.rev + r.revenue }), { ad: 0, rev: 0 });\n    c.totals = { ad_spend: tot.ad, revenue: tot.rev, roas: tot.ad > 0 ? r2(tot.rev / tot.ad * 100) : null };\n    c.counts = { keep: keep.length, watch: watch.length, drop: results.length - keep.length - watch.length };\n    return c;\n  }\n\n  // 다음 회차 추천에 넘길 이력 (유지 → 가산점, 제외 → 추천에서 빠짐)\n  function pastCollabs(store) {\n    return poolList(store).filter(p => p.status === 'keep' || p.status === 'drop')\n      .map(p => ({ handle: p.handle, platform: p.platform, result: p.status === 'keep' ? 'good' : 'bad', exclude: p.status === 'drop', memo: p.avg_roas !== null ? `누적 ROAS ${p.avg_roas}%` : '' }));\n  }\n\n  function aiPrompt(c, store) {\n    const won = n => Number(n || 0).toLocaleString() + '원';\n    return `아래는 인플루언서 협업 콘텐츠를 광고 소재로 집행한 결과야. 코드가 이미 판정과 예산 재배분을 끝냈으니, 숫자는 그대로 인용하고 대표님이 이해하기 쉽게 해석해줘.\n\n[캠페인] ${c.name} (${c.round}회차) / 목표 ROAS ${c.target_roas}% / 전체 광고비 ${won(c.totals.ad_spend)} → 매출 ${won(c.totals.revenue)} (ROAS ${c.totals.roas}%)\n\n[인플루언서 콘텐츠별 광고 성과 — 코드 계산]\n${c.results.map(r => `- ${r.handle} (${r.platform}): 광고비 ${won(r.ad_spend)}, 클릭 ${r.clicks}, 구매 ${r.conversions}건, 매출 ${won(r.revenue)} | CTR ${r.ctr ?? '-'}% CVR ${r.cvr ?? '-'}% ROAS ${r.roas ?? '-'}% | 협업비 포함 ROI ${r.total_roi ?? '-'}% → 판정 ${({ keep: '유지', watch: '관찰', drop: '제외' })[r.verdict]} (${r.reason})`).join('\\n')}\n\n[다음 회차 광고 예산 재배분 — 코드 계산, 총 ${won(c.next_ad_budget)}]\n${c.allocation.map(a => `- ${a.handle}: ${won(a.current)} → ${won(a.proposed)}`).join('\\n')}${c.unallocated ? `\\n- 미배정 ${won(c.unallocated)} (새 후보 테스트용)` : ''}\n\n[검증된 인플루언서 풀]\n${poolList(store).slice(0, 15).map(p => `- ${p.handle} (${p.platform}) 상태 ${p.status}, 누적 ROAS ${p.avg_roas ?? '-'}%, ${p.rounds.length}회 참여`).join('\\n')}\n\n[출력 형식] 아래 JSON 구조 그대로, 값만 채워서 출력:\n{\n  \"summary\": \"이번 회차 결과 한 줄 요약\",\n  \"insights\": [\"성과 차이의 원인 해석 1\", \"해석 2\", \"해석 3\"],\n  \"per_influencer\": [ { \"handle\": \"@핸들 그대로\", \"comment\": \"이 인플루언서에 대한 한 줄 코멘트와 다음 행동\" } ],\n  \"creative_tips\": [\"다음 광고 소재에 반영할 점 1\", \"반영할 점 2\"],\n  \"next_round_strategy\": \"다음 회차 전략 (유지 인플루언서 활용, 새 후보 테스트 규모 포함 2~3문장)\"\n}`;\n  }\n\n  return { RULES, start, evaluate, poolList, pastCollabs, aiPrompt, init, keyOf };\n})();\nif (typeof window !== 'undefined') window.ChloeCycle = ChloeCycle;\n\n// 프론트엔드(MVP)가 보낸 요청 본문 읽기\nconst raw = $input.first().json;\nlet b = raw.body ?? raw;\nif (typeof b === 'string') { try { b = JSON.parse(b); } catch (e) { b = {}; } }\nconst v = (x, d) => (x === undefined || x === null || x === '' ? d : x);\n\n// ▼ 기록 저장소: 이 워크플로의 static data (n8n 데이터베이스에 저장되어 어느 컴퓨터에서든 이어짐)\n//   운영 URL(Publish 상태)로 호출했을 때만 저장됩니다. 편집 화면의 테스트 실행은 저장되지 않아요.\nconst store = $getWorkflowStaticData('global');\nChloeCycle.init(store);\nconst action = v(b.action, 'get');\nlet out = { ok: true, type: 'cycle', action, needs_ai: false };\ntry {\n  if (action === 'start') out.campaign = ChloeCycle.start(store, b);\n  else if (action === 'evaluate') {\n    out.campaign = ChloeCycle.evaluate(store, b);\n    out.needs_ai = true;\n    out.prompt = ChloeCycle.aiPrompt(out.campaign, store);\n  } else if (action === 'reset') {\n    if (b.confirm === 'RESET') { store.pool = {}; store.campaigns = []; out.reset = true; }\n    else out = { ...out, ok: false, error: '초기화하려면 confirm 값이 필요해요' };\n  }\n} catch (e) { out = { ok: false, type: 'cycle', action, needs_ai: false, error: e.message }; }\nout.pool = ChloeCycle.poolList(store);\nout.campaigns = store.campaigns.slice(0, 10);\nout.past_collabs = ChloeCycle.pastCollabs(store);\nout.startedAt = Date.now();\nreturn [{ json: out }];\n"
+      }
+    },
+    {
+      "id": "68b93b98-b86e-54df-bcfd-b6ccaacb3389",
+      "name": "AI 해석 필요?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "17d74ffa-1f60-5f92-89d7-7fffd5e4d0ed",
+              "leftValue": "={{ $json.needs_ai }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "7627d9e2-e884-5230-ab40-40d1fc54d002",
+      "name": "AI Agent 클로이",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        720,
+        -120
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.prompt }}",
+        "options": {
+          "systemMessage": "너는 '클로이(Chloe)'다. 인플루언서 협업 콘텐츠를 광고로 집행한 결과를 해석해서, 다음 회차를 더 잘하게 돕는 AI 마케팅 에이전트다.\n\n[역할]\n1. 인플루언서 콘텐츠별 광고 성과 차이가 왜 났는지 해석한다.\n2. 코드가 내린 판정(유지·관찰·제외)과 예산 재배분을 대표가 납득할 수 있게 설명한다.\n3. 다음 광고 소재와 다음 회차 인플루언서 전략을 제안한다.\n\n[원칙]\n- 숫자와 판정, 예산 재배분은 코드가 이미 계산했다. 그대로 인용하고 바꾸거나 다시 계산하지 않는다.\n- 데이터가 부족한 판정(관찰)은 결론을 내리지 말고 다음 회차에서 무엇을 확인할지 말한다.\n- 인플루언서 개인을 비난하지 않고, 콘텐츠·타겟·소재 관점에서 설명한다.\n- 쉬운 한국어로 쓰고, 출력은 사용자 메시지에 있는 JSON 형식 하나만 출력한다. 코드블록, 인사말, 설명을 붙이지 않는다.",
+          "maxIterations": 5
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "id": "19b544bb-c35f-5a6e-b271-dd0eaa2fa4c7",
+      "name": "AI 해석 붙이기 · 저장",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        980,
+        -120
+      ],
+      "parameters": {
+        "jsCode": "// AI 응답에서 JSON만 안전하게 꺼내기\nfunction parseJson(t) {\n  t = String(t || '').replace(/```json/gi, '').replace(/```/g, '');\n  const s = t.indexOf('{'), e = t.lastIndexOf('}');\n  if (s < 0 || e < 0) throw new Error('JSON not found');\n  return JSON.parse(t.slice(s, e + 1));\n}\n\n// AI 해석을 캠페인 기록에 붙여 저장\nconst src = $('판정·저장 (선순환 엔진)').first().json;\nlet ai = null;\ntry { ai = parseJson($input.first().json.output); } catch (e) { ai = null; }\nconst store = $getWorkflowStaticData('global');\nconst c = (store.campaigns || []).find(x => x.id === src.campaign.id);\nif (c && ai) c.ai = ai;\nconst { prompt, needs_ai, ...rest } = src;\nreturn [{ json: { ...rest, campaign: { ...src.campaign, ai }, campaigns: store.campaigns.slice(0, 10), elapsed_ms: Date.now() - src.startedAt } }];\n"
+      }
+    },
+    {
+      "id": "64f4c218-94bc-5df0-be34-99983b63aaa3",
+      "name": "Respond to Webhook (결과 보내기)",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1220,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "ee9259e8-0534-519d-8698-3e266fd3e4ba",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        640,
+        120
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-6-luna",
+          "mode": "list",
+          "cachedResultName": "gpt-6-luna"
+        },
+        "builtInTools": {},
+        "options": {
+          "timeout": 120000,
+          "responseFormat": "json_object"
+        }
+      }
+    },
+    {
+      "id": "d40e4f40-670f-5988-9834-6e2f68901364",
+      "name": "Calculator",
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        860,
+        120
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Webhook (프론트 요청 받기)": {
+      "main": [
+        [
+          {
+            "node": "판정·저장 (선순환 엔진)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "판정·저장 (선순환 엔진)": {
+      "main": [
+        [
+          {
+            "node": "AI 해석 필요?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI 해석 필요?": {
+      "main": [
+        [
+          {
+            "node": "AI Agent 클로이",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook (결과 보내기)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent 클로이": {
+      "main": [
+        [
+          {
+            "node": "AI 해석 붙이기 · 저장",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI 해석 붙이기 · 저장": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook (결과 보내기)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent 클로이",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent 클로이",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false,
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

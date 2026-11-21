@@ -145,6 +145,25 @@ h3 svg.ic{color:var(--pri)}
 .loop{margin-top:14px;font-size:12.5px;display:flex;gap:8px;flex-wrap:wrap}
 .loop span{background:var(--pri-soft);color:var(--pri-ink);padding:6px 10px;border-radius:8px;font-weight:600}
 .stat{padding:18px}
+/* campaign cycle */
+.cysteps{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap}
+.cystep{flex:1;min-width:170px;display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff}
+.cystep em{font-style:normal;width:34px;height:34px;border-radius:10px;background:var(--bg-soft);color:var(--sub);font-weight:800;display:grid;place-items:center}
+.cystep b{display:block;font-size:14px} .cystep span{font-size:12px;color:var(--sub)}
+.cystep.done{border-color:#bfe8d5;background:var(--good-soft)} .cystep.done em{background:var(--good);color:#fff}
+.cystep.now{border-color:var(--pri);box-shadow:0 0 0 3px var(--pri-soft)} .cystep.now em{background:var(--pri);color:#fff}
+.cyarr{display:grid;place-items:center;color:#b7b3cf}
+.cyloop{flex-basis:100%;font-size:12.5px;color:var(--pri-ink);background:var(--pri-soft);border-radius:8px;padding:8px 12px;margin-top:4px}
+@media(max-width:900px){.cyarr{display:none}}
+.cym{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.cym:last-of-type{border-bottom:0}
+.cytable input{padding:7px 8px;font-size:13px;min-width:90px}
+.cyalloc{display:grid;grid-template-columns:minmax(120px,200px) 1fr;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.cybars div{display:grid;grid-template-columns:32px 1fr 100px;gap:8px;align-items:center;font-size:12px;color:var(--sub)}
+.cybars s{display:block;height:8px;border-radius:9px;background:var(--line);overflow:hidden;text-decoration:none}
+.cybars s b{display:block;height:100%;background:var(--pri);border-radius:9px}
+.cybars em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums}
+@media(max-width:600px){.cyalloc{grid-template-columns:1fr}}
 footer.foot{background:var(--navy);color:rgba(255,255,255,.7);font-size:13px;padding:48px 0 20px}
 footer.foot .cols{display:grid;grid-template-columns:1.6fr 1fr 1fr 1.2fr;gap:28px}
 footer.foot h4{color:#fff;font-size:12px;letter-spacing:1.4px;margin:0 0 12px}
@@ -352,6 +371,7 @@ tr.inpf td{background:#f8f7ff}
     </a>
     <nav class="tabs" id="tabs">
       <button data-go="home" class="on">홈</button>
+      <button data-go="cycle">캠페인 사이클</button>
       <button data-go="perf">퍼포먼스</button>
       <button data-go="cre">소재 스튜디오</button>
       <button data-go="inf">인플루언서</button>
@@ -409,7 +429,7 @@ tr.inpf td{background:#f8f7ff}
       <div data-go="inf"><svg class="ic"><use href="#i-users"/></svg><b>인플루언서 추천</b><span>플랫폼·티어별 예산 맞춤 조합</span></div>
       <div data-go="inf"><svg class="ic"><use href="#i-message"/></svg><b>DM · 계약 초안</b><span>첫 제안 메시지와 표준 계약서</span></div>
       <div data-go="rep"><svg class="ic"><use href="#i-bar"/></svg><b>성과 분석</b><span>CTR·CVR·CPA·ROAS 자동 계산</span></div>
-      <div data-go="rep"><svg class="ic"><use href="#i-wallet"/></svg><b>예산 조정</b><span>규칙 안은 자동, 밖은 대표 승인</span></div>
+      <div data-go="cycle"><svg class="ic"><use href="#i-repeat"/></svg><b>선순환 사이클</b><span>성과 좋은 인플루언서만 남기고 예산 재배분</span></div>
     </div>
   </div></div>
 
@@ -497,6 +517,19 @@ tr.inpf td{background:#f8f7ff}
       <div class="card" id="pfOut"><div class="empty"><div class="ico"><svg class="ic"><use href="#i-target"/></svg></div>조건을 입력하고 <b>클로이에게 맡기기</b>를 눌러주세요.</div></div>
     </div>
   </div>
+</section>
+
+<!-- ================= CAMPAIGN CYCLE ================= -->
+<section class="page" id="p-cycle">
+  <div class="page-head"><div class="eyebrow">Growth Loop</div><h1>캠페인 사이클</h1><p class="lead">인플루언서 협업 → 협업 콘텐츠로 매체 광고 → 성과 → 잘된 인플루언서만 남기고 예산 재배분. 회차가 쌓일수록 추천이 정확해져요.</p></div>
+  <div class="card" style="margin-bottom:16px"><div class="cysteps" id="cySteps"></div></div>
+  <div class="grid g2">
+    <div class="card" id="cyCamp"></div>
+    <div class="card" id="cyPool"></div>
+  </div>
+  <div class="card" style="margin-top:16px" id="cyInput"></div>
+  <div class="card" style="margin:12px 0;padding:14px 18px"><div class="pipe" id="cyPipe"></div></div>
+  <div class="card" id="cyOut"></div>
 </section>
 
 <!-- ================= CREATIVE ================= -->
@@ -638,6 +671,7 @@ tr.inpf td{background:#f8f7ff}
 <div class="toast" id="toast"></div>
 
 <script src="engine/influencer-engine.js"></script>
+<script src="engine/cycle-engine.js"></script>
 <script>
 /* ============================ 공통 ============================ */
 const $ = s => document.querySelector(s);
@@ -665,7 +699,7 @@ let settings = { url: '', mode: 'demo', sheet: '', ...store.get('settings', {}) 
 let records = store.get('history', []);
 let collabs = store.get('collabs', []);
 const MANUAL = { performance: 180, influencer: 240, report: 90, creative: 150 };
-const PATHS = { performance: 'chloe-performance', influencer: 'chloe-influencer', report: 'chloe-report', creative: 'chloe-creative' };
+const PATHS = { performance: 'chloe-performance', influencer: 'chloe-influencer', report: 'chloe-report', creative: 'chloe-creative', cycle: 'chloe-cycle' };
 
 /* ============================ 탭 ============================ */
 function go(id) {
@@ -673,6 +707,7 @@ function go(id) {
   $$('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.go === id));
   if (id === 'hist') renderHistory();
   if (['perf', 'inf', 'cre'].includes(id)) renderProdHints();
+  if (id === 'cycle') loadCycle();
   window.scrollTo({ top: 0, behavior: 'smooth' });
   try { location.hash = id; } catch (e) {}
 }
@@ -692,8 +727,10 @@ function renderProdHints() {
   $('#pfAssets').innerHTML = assets.length
     ? `<svg class="ic"><use href="#i-link"/></svg> 연결 ② 사용 허가된 협업 콘텐츠 <b>${assets.length}건</b>을 광고 소재 기획에 반영해요: ${assets.map(a => esc(a.handle)).join(', ')}`
     : '<svg class="ic"><use href="#i-link"/></svg> 연결 ②: 이력 탭에서 인플루언서 콘텐츠 사용을 허가하면 광고 소재에 함께 반영돼요.';
+  const cp = cycle.past_collabs || [], keepN = cp.filter(p => !p.exclude).length, dropN = cp.filter(p => p.exclude).length;
   const past = collabs.filter(c => c.result);
-  $('#ifPast').innerHTML = past.length
+  if (cp.length) $('#ifPast').innerHTML = `<svg class="ic"><use href="#i-repeat"/></svg> 캠페인 사이클 반영: 유지 <b>${keepN}명</b> 가산점 · 제외 <b>${dropN}명</b>은 후보에서 빠져요 · <a href="#" data-go="cycle">사이클 보기</a>`;
+  else $('#ifPast').innerHTML = past.length
     ? `<svg class="ic"><use href="#i-repeat"/></svg> 연결 ① 지난 협업 성과 <b>${past.length}건</b>을 추천 점수에 반영해요: ${past.map(c => esc(c.handle) + (c.result === 'good' ? ' 👍' : ' 👎')).join(', ')}`
     : '<svg class="ic"><use href="#i-repeat"/></svg> 연결 ①: 이력 탭에서 협업 성과를 기록하면 다음 추천에 반영돼요.';
 }
@@ -703,6 +740,7 @@ const NODES = {
   performance: ['Webhook', '요청 정리', 'AI Agent 클로이', '결과 검증', '응답'],
   influencer: ['Webhook', '요청·설정', '팀 시트', 'YouTube API', '티어·적합도 계산', 'AI Agent 클로이', '결과 검증', '응답'],
   creative: ['Webhook', '요청·설정', 'AI Agent 클로이', '소재 검증', '이미지 생성', '결과 합치기', '응답'],
+  cycle: ['Webhook', '판정·저장 (선순환 엔진)', 'AI Agent 클로이', 'AI 해석 붙이기 · 저장', '응답'],
   report: ['Webhook', '지표 계산', 'AI Agent 클로이', '예산 규칙 검사', '응답'],
 };
 function pipe(el, type, state) { // state: idle | index running | 'done'
@@ -813,8 +851,9 @@ function approve(type) {
       if (!collabs.find(c => c.handle === r.handle)) collabs.push({ handle: r.handle, name: r.name, platform: r.platform, tier: r.tier_label, cost: r.est_cost, product: product.name, status: '제안 발송 대기', result: '', assetOk: false });
     });
     store.set('collabs', collabs);
+    startCycleFrom(cur.res);
   }
-  $('#ap-' + type).outerHTML = `<div class="approve"><img class="chloe-av" src="assets/chloe-face.jpg" alt="클로이"><div class="who">✔ 승인 완료 · 이력에 저장됐어요<small>수작업 예상 ${MANUAL[type]}분 → 클로이+대표 검토 ${totalMin}분 (${Math.round((1 - totalMin / MANUAL[type]) * 100)}% 단축)</small></div><button class="btn sm" data-go="hist">이력 보기</button></div>`;
+  $('#ap-' + type).outerHTML = `<div class="approve"><img class="chloe-av" src="assets/chloe-face.jpg" alt="클로이"><div class="who">✔ 승인 완료 · 이력에 저장됐어요<small>수작업 예상 ${MANUAL[type]}분 → 클로이+대표 검토 ${totalMin}분 (${Math.round((1 - totalMin / MANUAL[type]) * 100)}% 단축)</small></div>${type === 'influencer' ? '<button class="btn sm pri" data-go="cycle">캠페인 사이클로</button>' : ''}<button class="btn sm" data-go="hist">이력 보기</button></div>`;
   updateStats(); toast('승인하고 저장했어요');
 }
 
@@ -866,7 +905,7 @@ function buildInf() {
     keywords: product.keywords, gender: product.gender, ages: product.ages,
     budget: Number($('#ifBudget').value), goal: $('#ifGoal').value, platforms: $$('#ifPlat input:checked').map(i => i.value),
     youtube_query: $('#ifYtq').value.trim(), sheet_csv_url: settings.sheet || '',
-    past_collabs: collabs.filter(c => c.result).map(c => ({ handle: c.handle, result: c.result, memo: c.memo || '' })) };
+    past_collabs: [...(cycle.past_collabs || []), ...collabs.filter(c => c.result && !(cycle.past_collabs || []).some(p => p.handle === c.handle)).map(c => ({ handle: c.handle, result: c.result, memo: c.memo || '' }))] };
 }
 const fol = c => c.platform === '유튜브' ? '구독자' : '팔로워';
 function bdBars(bd) {
@@ -1132,6 +1171,161 @@ async function composeCanvas(fk, v, bg, tc) {
   return cv.toDataURL('image/jpeg', .9);
 }
 
+/* ============================ 캠페인 사이클 (선순환) ============================ */
+// 계산은 engine/cycle-engine.js (n8n 워크플로 05와 같은 코드). 운영 모드에서는 기록이 n8n에 저장돼요.
+const VERD = { keep: ['유지', 'good'], watch: ['관찰', 'warn'], drop: ['제외', 'bad'], new: ['신규', ''] };
+let cycle = store.get('cycleCache', { pool: [], campaigns: [], past_collabs: [] });
+let cycleSel = null;
+const cyDrafts = store.get('cyDrafts', {});
+const cyAssets = store.get('cyAssets', {});
+async function cycleCall(body) {
+  let d;
+  if (isLive()) {
+    const r = await fetch(endpoint('cycle'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (!r.ok) throw new Error(`n8n 응답 오류 ${r.status}${r.status === 404 ? ' (Chloe 05 워크플로 Publish 확인)' : ''}`);
+    d = await r.json(); if (Array.isArray(d)) d = d[0];
+    d.source = 'n8n';
+  } else { d = await MOCK.cycle(body); d.source = 'demo'; }
+  if (d.ok === false) throw new Error(d.error || '처리 실패');
+  cycle = { pool: d.pool || [], campaigns: d.campaigns || [], past_collabs: d.past_collabs || [], source: d.source };
+  store.set('cycleCache', cycle);
+  return d;
+}
+async function loadCycle() {
+  try { await cycleCall({ action: 'get' }); } catch (e) { toast('사이클 기록을 못 불러왔어요: ' + e.message); }
+  renderCycle(); renderProdHints();
+}
+const curCampaign = () => cycle.campaigns.find(c => c.id === cycleSel) || cycle.campaigns[0] || null;
+
+function renderCycle() {
+  const c = curCampaign(); cycleSel = c ? c.id : null;
+  const evald = c && c.status === 'evaluated';
+  const assetsOk = c && Object.values(cyAssets[c.id] || {}).some(Boolean);
+  const st = [!!c, evald || assetsOk, evald, evald];
+  const active = st.indexOf(false);
+  const steps = [['users', '인플루언서 선정', '추천 조합 승인'], ['palette', '협업 콘텐츠 → 광고', '사용 허가 콘텐츠로 소재'], ['bar', '광고 성과 입력', '인플루언서별 성과'], ['repeat', '판정 · 재배분', '유지만 남기고 예산 이동']];
+  $('#cySteps').innerHTML = steps.map(([ic, t, s], i) => `<div class="cystep ${st[i] ? 'done' : i === active ? 'now' : ''}"><em>${st[i] ? '✔' : i + 1}</em><div><b><svg class="ic"><use href="#i-${ic}"/></svg> ${t}</b><span>${s}</span></div></div>`).join('<div class="cyarr"><svg class="ic"><use href="#i-arrow"/></svg></div>')
+    + `<div class="cyloop"><svg class="ic"><use href="#i-repeat"/></svg> 판정 결과는 다음 회차 인플루언서 추천에 자동 반영 (유지 +가산점 · 제외는 후보에서 빠짐)${cycle.source ? ` · <span class="badge ${cycle.source === 'n8n' ? 'good' : 'warn'}">${cycle.source === 'n8n' ? 'n8n에 저장 중' : '데모: 이 브라우저에 저장'}</span>` : ''}</div>`;
+  // 현재 캠페인
+  if (!c) {
+    $('#cyCamp').innerHTML = `<h3><svg class="ic"><use href="#i-target"/></svg>현재 캠페인</h3><div class="empty" style="padding:30px"><div class="ico"><svg class="ic"><use href="#i-users"/></svg></div>아직 캠페인이 없어요.<br>인플루언서 탭에서 추천 조합을 <b>승인</b>하면 1회차가 시작돼요.<div style="margin-top:12px"><button class="btn pri" data-go="inf">인플루언서 추천받기 <svg class="ic"><use href="#i-arrow"/></svg></button></div></div>`;
+  } else {
+    const a = cyAssets[c.id] || {};
+    $('#cyCamp').innerHTML = `<h3><svg class="ic"><use href="#i-target"/></svg>현재 캠페인</h3>
+      <select data-cy="sel" style="margin-bottom:12px">${cycle.campaigns.map(x => `<option value="${x.id}" ${x.id === c.id ? 'selected' : ''}>${esc(x.name)} · ${x.status === 'evaluated' ? '판정 완료' : '진행 중'}</option>`).join('')}</select>
+      ${c.members.map((m, i) => `<div class="cym"><div class="avatar" style="background:${AV[i % AV.length]};width:36px;height:36px;font-size:14px">${esc((m.name || m.handle).slice(0, 1))}</div>
+        <div style="flex:1;min-width:0"><b>${esc(m.name)}</b> <span class="muted">${esc(m.handle)} · ${esc(m.platform)}${m.tier_label ? ' · ' + esc(m.tier_label) : ''}</span><div class="muted">협업비 ${won(m.est_cost)}</div></div>
+        <label class="chips"><label><input type="checkbox" data-cy="asset" data-h="${esc(m.handle)}" ${a[m.handle] ? 'checked' : ''}>광고 사용 허가</label></label></div>`).join('')}
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn" data-cy="tocre"><svg class="ic"><use href="#i-palette"/></svg> ② 허가된 협업 콘텐츠로 광고 소재 만들기</button></div>`;
+  }
+  // 인플루언서 풀
+  const cnt = s => cycle.pool.filter(p => p.status === s).length;
+  $('#cyPool').innerHTML = `<h3><svg class="ic"><use href="#i-award"/></svg>검증된 인플루언서 풀</h3>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"><span class="badge good">유지 ${cnt('keep')}</span><span class="badge warn">관찰 ${cnt('watch')}</span><span class="badge bad">제외 ${cnt('drop')}</span><span class="badge">신규 ${cnt('new')}</span></div>
+    ${cycle.pool.length ? `<div class="tscroll"><table><tr><th>인플루언서</th><th>상태</th><th class="num">참여</th><th class="num">누적 ROAS</th></tr>
+      ${cycle.pool.map(p => `<tr><td><b>${esc(p.name || p.handle)}</b><br><span class="muted">${esc(p.handle)} · ${esc(p.platform)}</span></td><td><span class="badge ${VERD[p.status][1]}">${VERD[p.status][0]}</span></td><td class="num">${(p.rounds || []).length}회</td><td class="num"><b>${p.avg_roas ?? '-'}${p.avg_roas !== null && p.avg_roas !== undefined ? '%' : ''}</b></td></tr>`).join('')}</table></div>`
+      : '<div class="hint">캠페인 성과를 판정하면 여기에 인플루언서별 누적 성과가 쌓여요.</div>'}
+    <div style="margin-top:10px;text-align:right"><button class="btn sm" data-cy="reset">기록 초기화</button></div>`;
+  // 성과 입력
+  if (!c) { $('#cyInput').innerHTML = `<h3><svg class="ic"><use href="#i-bar"/></svg>③ 광고 성과 입력</h3><div class="muted">캠페인을 시작하면 인플루언서별 입력 칸이 생겨요.</div>`; }
+  else {
+    const dr = cyDrafts[c.id] || {};
+    const prev = Object.fromEntries((c.results || []).map(r => [r.handle, r]));
+    const val = (m, k) => (dr[m.handle] && dr[m.handle][k] !== undefined) ? dr[m.handle][k] : prev[m.handle] ? prev[m.handle][k] : (k === 'collab_cost' ? m.est_cost : '');
+    $('#cyInput').innerHTML = `<h3><svg class="ic"><use href="#i-bar"/></svg>③ 협업 콘텐츠 광고 성과 입력 <span class="muted" style="font-weight:500">광고 매체 관리자 화면의 숫자를 인플루언서 콘텐츠별로 입력</span></h3>
+      <div class="tscroll"><table class="cytable"><tr><th>인플루언서 콘텐츠</th><th>광고비</th><th>노출</th><th>클릭</th><th>구매</th><th>매출</th><th>협업비</th></tr>
+      ${c.members.map(m => `<tr><td><b>${esc(m.name)}</b><br><span class="muted">${esc(m.handle)}</span></td>${['ad_spend', 'impressions', 'clicks', 'conversions', 'revenue', 'collab_cost'].map(k => `<td><input type="number" data-cy="in" data-h="${esc(m.handle)}" data-k="${k}" value="${esc(val(m, k))}"></td>`).join('')}</tr>`).join('')}</table></div>
+      <div class="row2" style="grid-template-columns:repeat(2,minmax(0,200px));margin-top:12px">
+        <label class="f"><span>목표 ROAS (%)</span><input type="number" id="cyTarget" value="${dr._target || c.target_roas || 300}"></label>
+        <label class="f"><span>다음 회차 광고 예산 (원)</span><input type="number" id="cyNext" value="${dr._next || c.next_ad_budget || ''}" placeholder="비우면 이번과 같은 금액"></label>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" data-cy="fill">예시 성과 채우기 (데모용)</button><span class="spacer" style="flex:1"></span><button class="btn pri" data-cy="eval"><svg class="ic"><use href="#i-repeat"/></svg> ④ 성과 판정 · 예산 재배분</button></div>`;
+  }
+  // 결과
+  pipe($('#cyPipe'), 'cycle', evald ? 'done' : undefined);
+  $('#cyOut').innerHTML = evald ? cycleResult(c) : `<div class="empty"><div class="ico"><svg class="ic"><use href="#i-repeat"/></svg></div>성과를 입력하고 <b>④ 성과 판정 · 예산 재배분</b>을 누르면<br>인플루언서별 유지/관찰/제외와 다음 회차 예산이 나와요.</div>`;
+}
+
+function cycleResult(c) {
+  const ai = c.ai || {};
+  const cm = Object.fromEntries((ai.per_influencer || []).map(x => [String(x.handle).toLowerCase(), x.comment]));
+  const maxA = Math.max(1, ...c.allocation.map(a => Math.max(a.current, a.proposed)));
+  return `<div class="res-head"><div class="rh"><img class="chloe-av" src="assets/chloe-face.jpg" alt="클로이"><div><h2>${esc(c.name)} 판정 결과</h2><span class="timechip">목표 ROAS ${c.target_roas}% · ${cycle.source === 'n8n' ? '<span class="badge good">n8n 실시간 · 저장됨</span>' : '<span class="badge warn">데모 결과</span>'}</span></div></div></div>
+    ${ai.summary ? `<div class="sum"><svg class="ic"><use href="#i-bulb"/></svg> ${esc(ai.summary)}</div>` : ''}
+    <div class="grid g4 block">${[['광고비', won(c.totals.ad_spend)], ['매출', won(c.totals.revenue)], ['ROAS', (c.totals.roas ?? '-') + '%'], ['유지 · 관찰 · 제외', `${c.counts.keep} · ${c.counts.watch} · ${c.counts.drop}`]].map(([k, v]) => `<div class="mini"><div class="muted">${k}</div><div style="font-size:20px;font-weight:800">${v}</div></div>`).join('')}</div>
+    <div class="block"><h3><svg class="ic"><use href="#i-calc"/></svg>인플루언서별 판정 <span class="badge">코드 계산</span></h3><div class="tscroll"><table>
+      <tr><th>인플루언서</th><th class="num">광고비</th><th class="num">CTR</th><th class="num">CVR</th><th class="num">ROAS</th><th class="num">협업비 포함</th><th>판정</th><th>이유 · 클로이 코멘트</th></tr>
+      ${c.results.map(r => `<tr><td><b>${esc(r.name)}</b><br><span class="muted">${esc(r.handle)}</span></td><td class="num">${won(r.ad_spend)}</td><td class="num">${r.ctr ?? '-'}%</td><td class="num">${r.cvr ?? '-'}%</td><td class="num"><b>${r.roas ?? '-'}%</b></td><td class="num">${r.total_roi ?? '-'}%</td>
+        <td><span class="badge ${VERD[r.verdict][1]}">${VERD[r.verdict][0]}</span></td><td>${esc(r.reason)}${cm[String(r.handle).toLowerCase()] ? `<div class="muted" style="margin-top:4px">${esc(cm[String(r.handle).toLowerCase()])}</div>` : ''}</td></tr>`).join('')}</table></div></div>
+    <div class="block"><h3><svg class="ic"><use href="#i-wallet"/></svg>다음 회차 광고 예산 재배분 <span class="badge">총 ${won(c.next_ad_budget)}</span></h3>
+      ${c.allocation.map(a => `<div class="cyalloc"><div><b>${esc(a.name)}</b> <span class="badge ${VERD[a.verdict][1]}">${VERD[a.verdict][0]}</span></div>
+        <div class="cybars"><div><span>이번</span><s><b style="width:${a.current / maxA * 100}%;background:#c9c5e4"></b></s><em>${won(a.current)}</em></div><div><span>다음</span><s><b style="width:${a.proposed / maxA * 100}%"></b></s><em><b>${won(a.proposed)}</b></em></div></div></div>`).join('')}
+      ${c.unallocated ? `<div class="hint">미배정 ${won(c.unallocated)}: 새 후보 테스트용으로 남겨 두었어요.</div>` : ''}</div>
+    ${(ai.insights || []).length ? `<div class="block"><h3><svg class="ic"><use href="#i-flask"/></svg>성과 해석</h3><ul class="clean">${ai.insights.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''}
+    ${(ai.creative_tips || []).length ? `<div class="block"><h3><svg class="ic"><use href="#i-palette"/></svg>다음 광고 소재에 반영할 점</h3><ul class="clean">${ai.creative_tips.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''}
+    ${ai.next_round_strategy ? `<div class="block"><div class="hint"><svg class="ic"><use href="#i-repeat"/></svg> <b>다음 회차 전략</b> ${esc(ai.next_round_strategy)}</div></div>` : ''}
+    <div class="approve"><img class="chloe-av" src="assets/chloe-face.jpg" alt="클로이"><div class="who">다음 회차로 이어가기<small>유지 ${c.counts.keep}명은 가산점, 제외 ${c.counts.drop}명은 추천에서 빠져요.</small></div><button class="btn pri" data-cy="next">다음 회차 인플루언서 추천받기 <svg class="ic"><use href="#i-arrow"/></svg></button></div>`;
+}
+
+$('#p-cycle').addEventListener('change', e => {
+  const t = e.target, c = curCampaign();
+  if (t.dataset.cy === 'sel') { cycleSel = t.value; renderCycle(); }
+  if (t.dataset.cy === 'asset' && c) { (cyAssets[c.id] = cyAssets[c.id] || {})[t.dataset.h] = t.checked; store.set('cyAssets', cyAssets); renderCycle(); }
+});
+$('#p-cycle').addEventListener('input', e => {
+  const t = e.target, c = curCampaign(); if (!c) return;
+  const d = cyDrafts[c.id] = cyDrafts[c.id] || {};
+  if (t.dataset.cy === 'in') { (d[t.dataset.h] = d[t.dataset.h] || {})[t.dataset.k] = t.value; }
+  if (t.id === 'cyTarget') d._target = t.value;
+  if (t.id === 'cyNext') d._next = t.value;
+  store.set('cyDrafts', cyDrafts);
+});
+$('#p-cycle').addEventListener('click', async e => {
+  const b = e.target.closest('[data-cy]'); if (!b || b.tagName === 'SELECT' || b.tagName === 'INPUT') return;
+  const c = curCampaign(), act = b.dataset.cy;
+  if (act === 'tocre' && c) {
+    const ok = c.members.filter(m => (cyAssets[c.id] || {})[m.handle]);
+    const who = (ok.length ? ok : c.members).map(m => m.name).join(', ');
+    $('#crPrompt').value = `${who} 님의 협업 콘텐츠(광고 사용 허가)를 활용한 광고. 실제 사용 후기처럼 진정성 있게, ${product.name}의 핵심 장점이 드러나게 만들어줘`;
+    go('cre'); toast(ok.length ? '허가된 협업 콘텐츠로 광고 소재를 만들어요' : '광고 사용 허가를 체크하면 그 인플루언서만 반영돼요');
+  }
+  if (act === 'fill' && c) { // 데모용: 인플루언서마다 성과가 다르게 나오도록
+    const pat = [[1600000, 1500, 40], [950000, 1200, 25], [320000, 900, 9], [50000, 80, 2], [700000, 1100, 12], [1200000, 1300, 30], [400000, 700, 8], [880000, 1000, 20]];
+    const d = cyDrafts[c.id] = {};
+    c.members.forEach((m, i) => { const [rev, clk, conv] = pat[i % pat.length]; d[m.handle] = { ad_spend: 300000, impressions: 60000, clicks: clk, conversions: conv, revenue: rev, collab_cost: m.est_cost }; });
+    d._target = 300; d._next = 300000 * c.members.length;
+    store.set('cyDrafts', cyDrafts); renderCycle(); toast('예시 성과를 채웠어요 (발표 시연용)');
+  }
+  if (act === 'eval' && c) {
+    const rows = c.members.map(m => { const o = { handle: m.handle, platform: m.platform, name: m.name };
+      $$(`#cyInput [data-h="${CSS.escape(m.handle)}"]`).forEach(i => o[i.dataset.k] = Number(i.value || 0)); return o; }).filter(r => r.ad_spend > 0);
+    if (!rows.length) return toast('광고비가 있는 인플루언서 성과를 한 명 이상 입력해주세요');
+    b.disabled = true; const label = b.innerHTML; b.innerHTML = '클로이가 판정 중…';
+    $('#cyOut').innerHTML = `<div class="empty working"><img class="chloe-av lg" src="assets/chloe-face.jpg" alt="클로이"><div><b>인플루언서별 성과를 판정하고 예산을 다시 나누는 중이에요…</b></div><div class="muted">보통 10~20초 걸려요</div></div>`;
+    let step = 0; pipe($('#cyPipe'), 'cycle', 0); const tk = setInterval(() => { step = Math.min(step + 1, 2); pipe($('#cyPipe'), 'cycle', step); }, 700);
+    try {
+      const d = await cycleCall({ action: 'evaluate', campaign_id: c.id, target_roas: Number($('#cyTarget').value) || 300, next_ad_budget: Number($('#cyNext').value) || 0, results: rows });
+      clearInterval(tk); delete cyDrafts[c.id]; store.set('cyDrafts', cyDrafts); cycleSel = d.campaign.id; renderCycle(); renderProdHints(); toast('판정 완료 · 인플루언서 풀이 업데이트됐어요');
+    } catch (err) { clearInterval(tk); pipe($('#cyPipe'), 'cycle'); $('#cyOut').innerHTML = `<div class="err"><b>판정에 실패했어요.</b><br>${esc(err.message)}</div>`; }
+    b.disabled = false; b.innerHTML = label;
+  }
+  if (act === 'next') { go('inf'); toast('유지 인플루언서는 가산점, 제외는 빠진 상태로 추천해요'); }
+  if (act === 'reset') {
+    if (!confirm('캠페인 사이클 기록(캠페인·인플루언서 풀)을 모두 지울까요?' + (isLive() ? '\nn8n에 저장된 기록도 지워져요.' : ''))) return;
+    try { await cycleCall({ action: 'reset', confirm: 'RESET' }); cycleSel = null; renderCycle(); renderProdHints(); toast('기록을 초기화했어요'); } catch (err) { toast('초기화 실패: ' + err.message); }
+  }
+});
+
+// 인플루언서 추천을 승인하면 → 캠페인 사이클 1회차(또는 다음 회차) 시작
+async function startCycleFrom(res) {
+  const pf = (res.engine || {}).portfolio || []; if (!pf.length) return;
+  try {
+    const d = await cycleCall({ action: 'start', product: product.name, influencer_budget: Number($('#ifBudget').value) || 0, members: pf });
+    cycleSel = d.campaign.id; renderCycle();
+    toast(`캠페인 사이클 '${d.campaign.name}'이 시작됐어요`);
+  } catch (e) { toast('캠페인 사이클 시작 실패: ' + e.message); }
+}
+
 /* ============================ ③ 성과 분석 ============================ */
 const DEFAULT_ROWS = [
   { name: '인스타그램 광고', spend: 600000, impressions: 120000, clicks: 1800, conversions: 54, revenue: 1728000 },
@@ -1242,6 +1436,17 @@ const MOCK = {
         note: '본 문서는 표준 양식 기반 초안이며 법률 자문이 아닙니다. 서명 전 조건을 대표님이 최종 확인해주세요.' } : null,
       content_brief: { key_messages: String(b.features).split(',').slice(0, 3).map(x => x.trim()).filter(Boolean), dos: ['제형·사용 장면 클로즈업', '본인의 실제 고민과 사용 루틴', '"#광고" 표기를 첫 줄에'], donts: ['효능 단정 표현 (예: "트러블이 사라진다")', '타사 제품 비하 비교', '미승인 할인 정보 언급'], schedule: '제품 발송(D) → 초안 제출(D+7) → 피드백(D+9) → 게시(D+12) → 성과 공유(D+19)' } } };
   },
+  async cycle(b) {
+    const st = store.get('cycleStore', {}); ChloeCycle.init(st);
+    let out = { ok: true, type: 'cycle', action: b.action };
+    try {
+      if (b.action === 'start') out.campaign = ChloeCycle.start(st, b);
+      else if (b.action === 'evaluate') { await sleep(1800); const c = ChloeCycle.evaluate(st, b); c.ai = mockCycleAi(c); out.campaign = c; }
+      else if (b.action === 'reset' && b.confirm === 'RESET') { st.pool = {}; st.campaigns = []; }
+    } catch (e) { out = { ok: false, error: e.message }; }
+    store.set('cycleStore', st);
+    return { ...out, pool: ChloeCycle.poolList(st), campaigns: st.campaigns.slice(0, 10), past_collabs: ChloeCycle.pastCollabs(st) };
+  },
   async creative(b) {
     const n = b.product, feats = String(b.features).split(/[,·]/).map(s => s.trim()).filter(Boolean);
     const f1 = feats[0] || n, f2 = feats[1] || f1, f3 = feats[2] || f2;
@@ -1295,6 +1500,20 @@ const MOCK = {
         influencer_feedback: '검색 키워드에서 "민감성"·"성분" 반응이 좋았어요. 다음 인플루언서는 성분 리뷰형 크리에이터를 우선 추천합니다.' } };
   },
 };
+
+function mockCycleAi(c) {
+  const by = v => c.results.filter(r => r.verdict === v);
+  const best = [...c.results].sort((a, b) => (b.roas || 0) - (a.roas || 0))[0];
+  return {
+    summary: `광고비 ${won(c.totals.ad_spend)}로 매출 ${won(c.totals.revenue)}(ROAS ${c.totals.roas}%)를 냈고, ${best ? best.name + '님 콘텐츠가 가장 효율적이었어요.' : ''} 다음 회차에는 유지 ${by('keep').length}명에게 예산을 모아요.`,
+    insights: [best ? `${best.name}님 콘텐츠는 CVR ${best.cvr}%로 클릭이 구매로 잘 이어졌어요. 실사용 후기형 콘텐츠가 효과적이었다는 신호예요.` : '성과 차이를 판단할 데이터가 부족해요.',
+      by('drop').length ? `${by('drop').map(r => r.name).join(', ')}님 콘텐츠는 클릭 대비 구매가 적어, 시청층과 제품 타겟이 달랐을 가능성이 있어요.` : '목표에 크게 못 미친 콘텐츠는 없어요.',
+      by('watch').length ? `${by('watch').map(r => r.name).join(', ')}님은 데이터가 부족하거나 목표 근처라 한 회차 더 확인이 필요해요.` : '모든 콘텐츠가 판단 가능한 만큼 데이터가 쌓였어요.'],
+    per_influencer: c.results.map(r => ({ handle: r.handle, comment: r.verdict === 'keep' ? '다음 회차 재협업 우선 제안, 같은 형식의 콘텐츠를 광고 소재로 계속 활용' : r.verdict === 'watch' ? '광고 소재(썸네일·첫 문장)를 바꿔 한 회차 더 테스트' : '이번 제품과는 맞지 않아 다음 회차 추천에서 제외' })),
+    creative_tips: ['성과가 좋았던 콘텐츠의 첫 3초(제형·사용 장면)를 다른 매체 소재에도 재활용', '구매 전환이 낮은 소재는 CTA를 "후기 보기"처럼 부담 없는 문구로 테스트'],
+    next_round_strategy: `유지 인플루언서 ${by('keep').length}명에게 다음 회차 광고 예산 대부분을 배정하고, 비슷한 시청층의 새 후보 1~2명을 소액으로 테스트해요. 제외된 ${by('drop').length}명은 추천 후보에서 자동으로 빠져요.`,
+  };
+}
 
 /* ============================ 이력 ============================ */
 const ICON = { performance: '<svg class="ic"><use href="#i-target"/></svg>', influencer: '<svg class="ic"><use href="#i-users"/></svg>', report: '<svg class="ic"><use href="#i-trend"/></svg>', creative: '<svg class="ic"><use href="#i-palette"/></svg>' };
@@ -1354,8 +1573,8 @@ $('#ifRun').onclick = () => runFlow('influencer');
 $('#crRun').onclick = () => { if (!$$('#crFmt input:checked').length) return toast('매체 규격을 하나 이상 골라주세요'); if (!$('#crPrompt').value.trim()) return toast('프롬프트를 적어주세요'); runFlow('creative'); };
 $('#rpRun').onclick = () => runFlow('report');
 pipe($('#pfPipe'), 'performance'); pipe($('#crPipe'), 'creative'); updateTierPrev(); pipe($('#ifPipe'), 'influencer'); pipe($('#rpPipe'), 'report');
-renderRows(); renderSettings(); renderProdHints(); updateStats();
-const h0 = location.hash.slice(1); if (['perf', 'cre', 'inf', 'rep', 'hist', 'settings'].includes(h0)) go(h0);
+renderRows(); renderSettings(); renderProdHints(); updateStats(); renderCycle();
+const h0 = location.hash.slice(1); if (['cycle', 'perf', 'cre', 'inf', 'rep', 'hist', 'settings'].includes(h0)) go(h0);
 </script>
 </body>
 </html>
