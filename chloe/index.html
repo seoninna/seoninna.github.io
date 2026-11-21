@@ -1089,7 +1089,22 @@ async function drawCreative(i) {
   const url = await composeCanvas(c.format, v, c.image, c.visual && c.visual.text_color);
   crState.urls[i] = url; const el = $('#crimg-' + i); if (el) el.src = url;
 }
-function afterCre(res) { (res.data.creatives || []).forEach((c, i) => drawCreative(i)); }
+async function afterCre(res) {
+  const list = res.data.creatives || [];
+  list.forEach((c, i) => drawCreative(i));
+  // n8n 서버의 무료 이미지 한도(Railway는 IP를 여러 앱이 공유)로 이미지가 없으면 → 브라우저에서 직접 생성
+  const need = list.map((c, i) => [c, i]).filter(([c]) => CR_FORMATS[c.format] && CR_FORMATS[c.format].visual && !c.image && c.visual);
+  const body = (current.creative || {}).body || {};
+  if (res.source !== 'n8n' || !need.length || body.make_image === false) return;
+  toast('서버 이미지 한도에 걸려 브라우저에서 이미지를 만들고 있어요 (20~60초)');
+  try {
+    const img = await freeImage(`Advertising photograph for a ${CAT_EN[body.category] || 'lifestyle'} brand. ${need[0][0].visual.image_prompt_en || ''} No text, no letters, no logos, no watermark.`, 1024, 1024);
+    if (crState.res !== res) return; // 그사이 새 결과가 나왔으면 무시
+    need.forEach(([c, i]) => { c.image = img; c.image_source = 'free'; c.visual.text_color = 'dark'; const el = $('#crc-' + i); if (el) el.outerHTML = creativeCard(i); drawCreative(i); });
+    const box = $('#crOut .err'); if (box) box.remove();
+    toast('이미지를 만들었어요');
+  } catch (e) { toast('이미지 생성 실패: ' + e.message + ' · 이미지 다시 만들기를 눌러보세요'); }
+}
 $('#crOut').addEventListener('click', e => {
   const v = e.target.closest('[data-crv]');
   if (v) { const [i, j] = v.dataset.crv.split(':').map(Number); crState.sel[i] = j; $('#crc-' + i).outerHTML = creativeCard(i); drawCreative(i); return; }

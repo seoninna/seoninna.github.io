@@ -118,14 +118,16 @@ const ChloeEngine = (() => {
   }
 
   // 유튜브 API (channels.list) 응답 → 후보
-  function fromYouTube(items) {
+  // extraTags: 검색어로 찾은 채널이면 제품 카테고리 태그를 붙여줌 (예: '수분크림 리뷰' 영상 → 뷰티)
+  function fromYouTube(items, extraTags) {
     return (items || []).map(ch => {
       const st = ch.statistics || {}, sn = ch.snippet || {};
       if (st.hiddenSubscriberCount) return null;
       const subs = Number(st.subscriberCount || 0), views = Number(st.viewCount || 0), vids = Number(st.videoCount || 0);
       const text = lower(sn.title + ' ' + sn.description);
-      const tags = Object.entries(CAT_WORDS).filter(([, ws]) => ws.some(w => text.includes(lower(w)))).map(([c]) => c);
-      const er = subs > 0 && vids > 0 ? round(views / vids / subs * 100, 1) : null;
+      const tags = [...new Set([...(extraTags || []), ...Object.entries(CAT_WORDS).filter(([, ws]) => ws.some(w => text.includes(lower(w)))).map(([c]) => c)])];
+      // 조회율(평균 조회수/구독자): 영상 한두 개가 크게 터진 작은 채널은 값이 비정상적으로 커서 100%로 제한
+      const er = subs > 0 && vids > 0 ? Math.min(100, round(views / vids / subs * 100, 1)) : null;
       return normalize({
         platform: '유튜브', handle: sn.customUrl || ch.id, name: sn.title, followers: subs,
         engagement_rate: er, tags, note: String(sn.description || '').replace(/\s+/g, ' ').slice(0, 80),
